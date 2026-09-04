@@ -170,7 +170,7 @@ export function StudentsTab({ courseId }: Props) {
 // ─── Inline student detail (non-fixed variant for use inside a tab) ─────────────
 
 import {
-  X, Award, Clock, CheckCircle2, AlertCircle, MessageSquare
+  X, Award, Clock, CheckCircle2, AlertCircle, Mail
 } from "lucide-react";
 
 function InlineStudentDetail({
@@ -277,10 +277,10 @@ function InlineStudentDetail({
 
         {/* Contact Action */}
         <Link
-          href={`/chat?userId=${student.student_id}`}
+          href={`mailto:${student.student_email}`}
           className="w-full flex items-center justify-center gap-2 py-2.5 bg-blue-600 hover:bg-blue-700 dark:bg-cyan-500 dark:hover:bg-cyan-600 text-white text-xs font-bold rounded-xl transition-all active:scale-95 shadow-xs"
         >
-          <MessageSquare className="w-4 h-4" />
+          <Mail className="w-4 h-4" />
           <span>Liên hệ học viên</span>
         </Link>
       </div>

@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { usePathname } from "next/navigation";
 import toast from "react-hot-toast";
 
 export interface StudyAlert {
@@ -19,31 +18,23 @@ interface NotificationContextType {
   alerts: StudyAlert[];
   readAlertKeys: Set<string>;
   unreadAlertsCount: number;
-  unreadChatCount: number;
   isLoading: boolean;
   fetchAlerts: () => Promise<void>;
   markAlertAsRead: (alert: StudyAlert) => void;
-  resetChatCount: () => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { status } = useSession();
-  const pathname = usePathname();
   const [alerts, setAlerts] = useState<StudyAlert[]>([]);
   const [readAlertKeys, setReadAlertKeys] = useState<Set<string>>(new Set());
-  const [unreadChatCount, setUnreadChatCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   // Load initial states from localStorage
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const storedChat = localStorage.getItem("unread_chat_messages_count");
-      if (storedChat) {
-        setUnreadChatCount(Number(storedChat));
-      }
       const storedReadKeys = localStorage.getItem("read_notification_keys");
       if (storedReadKeys) {
         try {
@@ -57,14 +48,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       }
     }
   }, []);
-
-  // Listen to pathname changes: if user goes to /chat, clear the unread count
-  useEffect(() => {
-    if (pathname === "/chat") {
-      setUnreadChatCount(0);
-      localStorage.setItem("unread_chat_messages_count", "0");
-    }
-  }, [pathname]);
 
   const fetchAlerts = useCallback(async () => {
     if (status !== "authenticated" || document.visibilityState === "hidden") return;
@@ -162,11 +145,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     });
   };
 
-  const resetChatCount = () => {
-    setUnreadChatCount(0);
-    localStorage.setItem("unread_chat_messages_count", "0");
-  };
-
   // Badge count should only count items that have not been read
   const unreadAlertsCount = alerts.filter(
     (alert) => !readAlertKeys.has(`${alert.alert_type}:${alert.course_id}:${alert.node_id ?? ""}:${alert.quiz_id ?? ""}`)
@@ -193,29 +171,15 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, [status, fetchAlerts]);
 
-  // useChat.tsx dispatches 'unread-chat-change' on every unreadCounts change.
-  // We listen here to keep the notification badge in sync without opening a
-  // second WebSocket connection (ChatProvider already handles its own WS).
-  useEffect(() => {
-    const syncCount = () => {
-      const stored = localStorage.getItem("unread_chat_messages_count");
-      if (stored) setUnreadChatCount(Number(stored));
-    };
-    window.addEventListener("unread-chat-change", syncCount);
-    return () => window.removeEventListener("unread-chat-change", syncCount);
-  }, []);
-
   return (
     <NotificationContext.Provider
       value={{
         alerts, // Return full alerts list so they are not deleted on read
         readAlertKeys,
         unreadAlertsCount,
-        unreadChatCount,
         isLoading,
         fetchAlerts,
         markAlertAsRead,
-        resetChatCount,
       }}
     >
       {children}

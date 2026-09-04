@@ -65,14 +65,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // Check admin-only paths
-  const adminPaths = [
-    "/dashboard",
-    "/users",
-    "/events",
-    "/tasks",
-    "/leaderboard",
-    "/settings",
-  ];
+  const adminPaths = ["/users", "/settings"];
 
   const isAdminPath = adminPaths.some(
     (path) => pathname === path || pathname.startsWith(path + "/")
@@ -98,11 +91,7 @@ export const config = {
     "/uploads/:path*",
     "/files/:path*",
     "/lms/:path*",
-    "/dashboard/:path*",
     "/users/:path*",
-    "/events/:path*",
-    "/tasks/:path*",
-    "/leaderboard/:path*",
     "/settings/:path*",
   ],
 };
