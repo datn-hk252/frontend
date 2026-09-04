@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
-import { sidebarSections, LogoIcon } from "@/constants";
+import { LogoIcon } from "@/constants";
+import { useSidebarMenu } from "@/hooks/common/useSidebarMenu";
 import { cn } from "@/lib/utils";
 import { UserAvatar } from "@/components/user/UserAvatar";
 import {
@@ -18,7 +19,6 @@ import { useNotifications } from "@/store/NotificationContext";
 import { useAuth } from "@/hooks/auth/useAuth";
 import { useTheme } from "next-themes";
 import SafeImage from "../common/SafeImage";
-import lmsService from "@/services/lms/lmsService";
 import { logout } from "@/services/auth/logout";
 import { GhostBtn } from "@/components/lms/shared/Button";
 
@@ -29,26 +29,19 @@ const DEFAULT_WIDTH = 240;
 const Sidebar: React.FC = () => {
   const pathname = usePathname();
   const { user, setUser } = useUser();
-  const { unreadAlertsCount, unreadChatCount } = useNotifications();
+  const { unreadAlertsCount } = useNotifications();
   const { isAdmin } = useAuth();
+  const { sections } = useSidebarMenu();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [width, setWidth] = useState(MIN_WIDTH);
   const prevWidthRef = useRef(DEFAULT_WIDTH);
   const resizeRef = useRef<{ startX: number; startWidth: number } | null>(null);
-  const [lmsRoles, setLmsRoles] = useState<string[]>([]);
 
   useEffect(() => {
     setMounted(true);
-    if (user) {
-      lmsService.getMyRoles()
-        .then(roles => {
-          if (roles) setLmsRoles(roles);
-        })
-        .catch(err => console.error("Error fetching LMS roles for Sidebar:", err));
-    }
-  }, [user]);
+  }, []);
 
   const toggleSidebar = () => {
     if (!isCollapsed) {
@@ -148,32 +141,7 @@ const Sidebar: React.FC = () => {
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto no-scrollbar py-3 px-2 space-y-4">
-          {sidebarSections
-            .map((section) => {
-              const filteredLinks = section.links.filter((link) => {
-                if (isAdmin) return true;
-                
-                const selectedRole = typeof window !== "undefined" ? sessionStorage.getItem("lms_selected_role") : null;
-                const isTeacher = user?.role === "ROLE_TEACHER" || user?.role === "ROLE_MANAGER" || lmsRoles.includes("TEACHER") || selectedRole === "TEACHER";
-                
-                if (link.label === "Hướng dẫn Học viên") {
-                  return true;
-                }
-                if (link.label === "Hướng dẫn Giảng viên") {
-                  return isTeacher;
-                }
-                return (
-                  link.label === "BDCourse" ||
-                  link.label === "Virtual Lab" ||
-                  link.label === "Chat" ||
-                  link.label === "Data Hackathon" ||
-                  link.label === "HCMUT HPC School"
-                );
-              });
-              return { ...section, links: filteredLinks };
-            })
-            .filter((section) => section.links.length > 0)
-            .map((section, i) => (
+          {sections.map((section, i) => (
             <div key={section.title}>
               {i > 0 && <div className="border-t border-slate-200 dark:border-blue-500/10 mb-3" />}
               {!isCollapsed && (
@@ -186,8 +154,7 @@ const Sidebar: React.FC = () => {
                   const isActive = pathname === link.route;
                   const Icon = link.icon;
                   const isExternal = link.route.startsWith("http");
-                  const hasBadge = link.route === "/lms" && unreadAlertsCount > 0;
-                  const hasChatBadge = link.label === "Chat" && unreadChatCount > 0;
+                  const hasBadge = link.badge === "alerts" && unreadAlertsCount > 0;
                   const item = (
                     <Link
                       href={link.route}
@@ -203,15 +170,18 @@ const Sidebar: React.FC = () => {
                     >
                       <div className="relative">
                         <Icon className="h-4 w-4 flex-shrink-0" />
-                        {isCollapsed && (hasBadge || hasChatBadge) && (
+                        {isCollapsed && hasBadge && (
                           <span className="absolute -top-1.5 -right-1.5 h-2 w-2 rounded-full bg-red-500 ring-1 ring-white dark:ring-slate-900 animate-pulse" />
                         )}
                       </div>
                       {!isCollapsed && (
                         <>
-                          {link.label === "BDCourse" ? (
+                          {link.brand ? (
                             <span>
-                              BD<span className={cn(isActive ? "text-white" : "text-blue-600 dark:text-cyan-400")}>Course</span>
+                              {link.brand.lead}
+                              <span className={cn(isActive ? "text-white" : "text-blue-600 dark:text-cyan-400")}>
+                                {link.brand.accent}
+                              </span>
                             </span>
                           ) : (
                             <span>{link.label}</span>
@@ -219,11 +189,6 @@ const Sidebar: React.FC = () => {
                           {hasBadge && (
                             <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-xs scale-90 font-bold text-white leading-none">
                               {unreadAlertsCount > 9 ? "9+" : unreadAlertsCount}
-                            </span>
-                          )}
-                          {hasChatBadge && (
-                            <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-xs scale-90 font-bold text-white leading-none animate-pulse">
-                              {unreadChatCount > 9 ? "9+" : unreadChatCount}
                             </span>
                           )}
                         </>

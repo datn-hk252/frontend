@@ -179,14 +179,10 @@ export function CoworkerLayout({ children }: { children: React.ReactNode }) {
     
     // Only display on workspace pages
     const workspacePaths = [
-      "/dashboard",
-      "/lms",
-      "/events",
-      "/tasks",
-      "/users",
-      "/profile",
-      "/chat"
-    ];
+        "/lms",
+        "/users",
+        "/myaccount",
+      ];
     
     return workspacePaths.some(
       (path) => pathname === path || pathname.startsWith(path + "/")

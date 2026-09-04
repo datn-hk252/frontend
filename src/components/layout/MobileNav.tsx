@@ -5,14 +5,14 @@ import { usePathname, useRouter } from "next/navigation";
 import { Menu, LogOut, Sun, Moon, Settings } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { UserAvatar } from "@/components/user/UserAvatar";
-import { sidebarSections, LogoIcon } from "@/constants";
+import { LogoIcon } from "@/constants";
+import { useSidebarMenu } from "@/hooks/common/useSidebarMenu";
 import { cn } from "@/lib/utils";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useUser } from "@/store/UserContext";
 import { useAuth } from "@/hooks/auth/useAuth";
 import { useTheme } from "next-themes";
 import SafeImage from "../common/SafeImage";
-import lmsService from "@/services/lms/lmsService";
 import { logout } from "@/services/auth/logout";
 
 const MobileNav = () => {
@@ -20,18 +20,8 @@ const MobileNav = () => {
   const { user, setUser } = useUser();
   const { isAdmin } = useAuth();
   const { theme, setTheme } = useTheme();
+  const { sections } = useSidebarMenu();
   const [isOpen, setIsOpen] = useState(false);
-  const [lmsRoles, setLmsRoles] = useState<string[]>([]);
-
-  useEffect(() => {
-    if (user) {
-      lmsService.getMyRoles()
-        .then(roles => {
-          if (roles) setLmsRoles(roles);
-        })
-        .catch(err => console.error("Error fetching LMS roles for MobileNav:", err));
-    }
-  }, [user]);
 
   const handleLogout = async () => {
     setUser(null);
@@ -85,31 +75,7 @@ const MobileNav = () => {
 
           {/* Nav */}
           <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-4">
-            {sidebarSections
-              .map((section) => {
-                const filteredLinks = section.links.filter((link) => {
-                  if (isAdmin) return true;
-                  
-                  const selectedRole = typeof window !== "undefined" ? sessionStorage.getItem("lms_selected_role") : null;
-                  const isTeacher = user?.role === "ROLE_TEACHER" || user?.role === "ROLE_MANAGER" || lmsRoles.includes("TEACHER") || selectedRole === "TEACHER";
-                  
-                  if (link.label === "Hướng dẫn Học viên") {
-                    return true;
-                  }
-                  if (link.label === "Hướng dẫn Giảng viên") {
-                    return isTeacher;
-                  }
-                  return (
-                    link.label === "BDCourse" ||
-                    link.label === "Virtual Lab" ||
-                    link.label === "Data Hackathon" ||
-                    link.label === "HCMUT HPC School"
-                  );
-                });
-                return { ...section, links: filteredLinks };
-              })
-              .filter((section) => section.links.length > 0)
-              .map((section, i) => (
+            {sections.map((section, i) => (
               <div key={section.title}>
                 {i > 0 && <div className="border-t border-slate-200 dark:border-slate-800 mb-3" />}
                 <p className="text-xs font-semibold text-slate-400 dark:text-slate-600 uppercase tracking-wider px-3 mb-1.5">
@@ -135,9 +101,12 @@ const MobileNav = () => {
                           )}
                         >
                           <Icon className="h-4 w-4 flex-shrink-0" />
-                          {link.label === "BDCourse" ? (
+                          {link.brand ? (
                             <span>
-                              BD<span className={cn(isActive ? "text-white" : "text-blue-600 dark:text-cyan-400")}>Course</span>
+                              {link.brand.lead}
+                              <span className={cn(isActive ? "text-white" : "text-blue-600 dark:text-cyan-400")}>
+                                {link.brand.accent}
+                              </span>
                             </span>
                           ) : (
                             link.label

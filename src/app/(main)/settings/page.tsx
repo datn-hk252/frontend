@@ -11,10 +11,7 @@ import {
   Lock, 
   FileText,
   ChevronRight,
-  Sparkles,
-  Layers,
-  Mail,
-  MessageSquare
+  Sparkles
 } from "lucide-react";
 import { useAuth } from "@/hooks/auth/useAuth";
 import { redirect } from "next/navigation";
@@ -36,30 +33,6 @@ const SETTINGS_CARDS: SettingCard[] = [
     href: "/settings/roles",
     status: "active",
     color: "bg-blue-500",
-  },
-  {
-    title: "Teams & Types",
-    description: "Manage organization teams, user divisions/types, and dynamic database categories.",
-    icon: Layers,
-    href: "/settings/teams-types",
-    status: "active",
-    color: "bg-emerald-500",
-  },
-  {
-    title: "Mail Delivery",
-    description: "Send system-wide emails, compose announcements, and attach official signatures.",
-    icon: Mail,
-    href: "/settings/mail",
-    status: "active",
-    color: "bg-purple-500",
-  },
-  {
-    title: "Chat Roles",
-    description: "Quản lý kênh chat, phân quyền truy cập theo role và whitelist người dùng.",
-    icon: MessageSquare,
-    href: "/settings/chat-roles",
-    status: "active",
-    color: "bg-cyan-500",
   },
   {
     title: "General Settings",
@@ -107,7 +80,7 @@ export default function SettingsHubPage() {
   const { isAdmin, loading } = useAuth() as any; // loading might not exist in current useAuth but good to have
 
   // If we wanted a hard guard:
-  // if (!loading && !isAdmin) redirect("/dashboard");
+  // if (!loading && !isAdmin) redirect("/lms");
 
   const container = {
     hidden: { opacity: 0 },
