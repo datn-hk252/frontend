@@ -65,3 +65,6 @@ mvnw.cmd
 node_modules/
 .next/
 .pnpm-store/
+
+# Code cau lac bo da tach ra khoi duong chay chinh, khong can trong image
+_parked/

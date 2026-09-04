@@ -21,6 +21,7 @@ const eslintConfig = [...compat.extends("next/core-web-vitals", "next/typescript
     "storybook-static/**",
     "public/**",
     "next-env.d.ts",
+    "_parked/**",
   ],
 }, {
   rules: {
