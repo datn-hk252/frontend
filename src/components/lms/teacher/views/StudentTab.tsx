@@ -13,6 +13,7 @@ import { useEffect, useState, useCallback } from "react";
 import { RefreshCw, Search } from "lucide-react";
 import Link from "next/link";
 import { analyticsService, CourseStudentProgress } from "@/services/lms/analyticsService";
+import { StudentSkillTrendPanel } from "@/components/lms/teacher/skills/SkillPanels";
 import { StudentProgressTable } from "@/components/lms/teacher/students/StudentProgressTable";
 import { TabBar, SearchBar }   from "@/components/lms/shared";
 import { UserAvatar }           from "@/components/user/UserAvatar";
@@ -174,7 +175,7 @@ import {
 } from "lucide-react";
 
 function InlineStudentDetail({
-  student, onClose,
+  student, courseId, onClose,
 }: {
   student: CourseStudentProgress;
   courseId: number;
@@ -274,6 +275,10 @@ function InlineStudentDetail({
             </p>
           </div>
         )}
+
+        {/* Per-skill progress across the whole course - answers "where is this
+            student weak", which the single progress percentage above cannot. */}
+        <StudentSkillTrendPanel courseId={courseId} studentId={student.student_id} compact />
 
         {/* Contact Action */}
         <Link

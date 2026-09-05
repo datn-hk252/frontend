@@ -6,6 +6,7 @@ import quizService from "@/services/lms/quizService";
 import { BreadcrumbNav } from "@/components/lms/shared/BreadcrumbNav";
 import { useQuizCourse } from "@/hooks/lms/student/useQuizCourse";
 import { Select } from "@/components/lms/shared";
+import { ClassSkillBreakdownPanel, StudentSkillBreakdownPanel } from "@/components/lms/teacher/skills/SkillPanels";
 import {
   ArrowLeft, CheckCircle, FileText,
   User, Calendar, Award, MessageSquare,
@@ -103,6 +104,14 @@ export default function TeacherGradingPage() {
 
   const questionTypes = [...new Set(answers.map(a => a.question_type))];
 
+  // When the filters narrow the list to a single student, their own skill
+  // profile is worth showing beside the answers being graded.
+  const filteredStudentIds = [...new Set(filteredAnswers.map(a => a.student_id))];
+  const soleStudent =
+    filteredStudentIds.length === 1
+      ? filteredAnswers.find(a => a.student_id === filteredStudentIds[0]) ?? null
+      : null;
+
   // ── Breadcrumb ─────────────────────────────────────────────────────────────
 
   const breadcrumbItems = [
@@ -161,6 +170,10 @@ export default function TeacherGradingPage() {
         ))}
       </div>
 
+      {/* Which skill the class as a whole is weak at. Sits above the filters
+          because it frames what the teacher is about to read below. */}
+      {courseId && <ClassSkillBreakdownPanel courseId={courseId} quizId={quizId} />}
+
       {/* ── Filters card ── */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-5">
         <div className="flex items-center gap-2 mb-4">
@@ -216,6 +229,15 @@ export default function TeacherGradingPage() {
           Hiển thị {filteredAnswers.length} / {answers.length} câu trả lời
         </p>
       </div>
+
+      {courseId && soleStudent && (
+        <StudentSkillBreakdownPanel
+          courseId={courseId}
+          quizId={quizId}
+          studentId={soleStudent.student_id}
+          studentName={soleStudent.student_name}
+        />
+      )}
 
       {/* ── Answers list ── */}
       {filteredAnswers.length === 0 ? (
