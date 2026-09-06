@@ -6,6 +6,8 @@ import skillService, {
   type StudentQuizSkillBreakdown,
   type StudentSkillTrend,
 } from "@/services/lms/skillService";
+import { analyticsService, type CourseStudentProgress } from "@/services/lms/analyticsService";
+import { Select } from "@/components/lms/shared";
 import SkillScoreBars from "./SkillScoreBars";
 import SkillTrendSparklines from "./SkillTrendSparklines";
 
@@ -49,90 +51,116 @@ function Frame({
   );
 }
 
-/** Class-wide skill profile on one quiz. */
-export function ClassSkillBreakdownPanel({
+/**
+ * Skill profile for one quiz, for the whole class or for one student.
+ *
+ * The two views share a quiz and differ only in scope, so they share a panel
+ * with a scope picker rather than sitting in two places. An earlier version tied
+ * the per-student view to the manual-grading list, which is empty whenever a
+ * quiz is fully auto-graded - the view was then unreachable for exactly the
+ * quizzes teachers run most.
+ */
+export function QuizSkillBreakdownPanel({
   courseId,
   quizId,
 }: {
   courseId: number;
   quizId: number;
 }) {
-  const [data, setData] = useState<ClassQuizSkillBreakdown | null>(null);
+  const [scope, setScope] = useState<string>("");     // "" = whole class
+  const [students, setStudents] = useState<CourseStudentProgress[]>([]);
+  const [classData, setClassData] = useState<ClassQuizSkillBreakdown | null>(null);
+  const [studentData, setStudentData] = useState<StudentQuizSkillBreakdown | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Enrolled students, so the picker can offer them by name.
+  useEffect(() => {
+    let cancelled = false;
+    analyticsService
+      .getCourseStudentProgressOverview(courseId)
+      .then((res) => !cancelled && setStudents(res?.data ?? []))
+      .catch(() => {
+        /* The picker degrades to "whole class" only; not worth an error. */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [courseId]);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    skillService
-      .getClassBreakdown(courseId, quizId)
-      .then((res) => !cancelled && setData(res?.data ?? null))
+    setError(null);
+
+    const request = scope
+      ? skillService
+          .getStudentBreakdown(courseId, quizId, Number(scope))
+          .then((res) => !cancelled && setStudentData(res?.data ?? null))
+      : skillService
+          .getClassBreakdown(courseId, quizId)
+          .then((res) => !cancelled && setClassData(res?.data ?? null));
+
+    request
       .catch(() => !cancelled && setError("Không tải được phổ điểm theo kỹ năng"))
       .finally(() => !cancelled && setLoading(false));
+
     return () => {
       cancelled = true;
     };
-  }, [courseId, quizId]);
+  }, [courseId, quizId, scope]);
+
+  const data = scope ? studentData : classData;
+  const subtitle = scope
+    ? "Bài kiểm tra này, xếp từ yếu nhất"
+    : classData
+      ? `${classData.student_count} học viên đã nộp · xếp từ yếu nhất`
+      : undefined;
 
   return (
-    <Frame
-      title="Kỹ năng cả lớp còn yếu"
-      subtitle={
-        data ? `${data.student_count} học viên đã nộp · xếp từ yếu nhất` : undefined
-      }
-      loading={loading}
-      error={error}
-    >
-      <SkillScoreBars
-        skills={data?.skills ?? []}
-        untaggedQuestions={data?.untagged_questions}
-      />
-    </Frame>
-  );
-}
+    <section className="rounded-2xl border border-slate-200 dark:border-slate-800 p-5">
+      <header className="mb-4 flex items-start justify-between gap-4">
+        <div>
+          <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+            {scope ? "Phổ kỹ năng của học viên" : "Kỹ năng cả lớp còn yếu"}
+          </h3>
+          {subtitle && (
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{subtitle}</p>
+          )}
+        </div>
 
-/** One student's skill profile on one quiz. */
-export function StudentSkillBreakdownPanel({
-  courseId,
-  quizId,
-  studentId,
-  studentName,
-}: {
-  courseId: number;
-  quizId: number;
-  studentId: number;
-  studentName?: string;
-}) {
-  const [data, setData] = useState<StudentQuizSkillBreakdown | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+        <Select
+          size="sm"
+          value={scope}
+          onValueChange={setScope}
+          placeholder="Cả lớp"
+          options={[
+            { value: "", label: "Cả lớp" },
+            ...students.map((st) => ({
+              value: String(st.student_id),
+              label: st.student_name,
+            })),
+          ]}
+          containerClassName="w-56 shrink-0"
+        />
+      </header>
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    skillService
-      .getStudentBreakdown(courseId, quizId, studentId)
-      .then((res) => !cancelled && setData(res?.data ?? null))
-      .catch(() => !cancelled && setError("Không tải được phổ điểm theo kỹ năng"))
-      .finally(() => !cancelled && setLoading(false));
-    return () => {
-      cancelled = true;
-    };
-  }, [courseId, quizId, studentId]);
-
-  return (
-    <Frame
-      title={studentName ? `Phổ kỹ năng của ${studentName}` : "Phổ kỹ năng của học viên"}
-      subtitle="Bài kiểm tra này, xếp từ yếu nhất"
-      loading={loading}
-      error={error}
-    >
-      <SkillScoreBars
-        skills={data?.skills ?? []}
-        untaggedQuestions={data?.untagged_questions}
-        emptyHint="Học viên chưa nộp bài, hoặc câu hỏi trong bài chưa được gắn kỹ năng."
-      />
-    </Frame>
+      {loading ? (
+        <p className="text-sm text-slate-500 dark:text-slate-400 py-6 text-center">Đang tải...</p>
+      ) : error ? (
+        <p className="text-sm text-red-600 dark:text-red-400 py-6 text-center">{error}</p>
+      ) : (
+        <SkillScoreBars
+          skills={data?.skills ?? []}
+          untaggedQuestions={data?.untagged_questions}
+          emptyHint={
+            scope
+              ? "Học viên chưa nộp bài, hoặc câu hỏi trong bài chưa được gắn kỹ năng."
+              : undefined
+          }
+        />
+      )}
+    </section>
   );
 }
 
