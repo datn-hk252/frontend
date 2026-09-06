@@ -6,6 +6,7 @@ import quizService from "@/services/lms/quizService";
 import { BreadcrumbNav } from "@/components/lms/shared/BreadcrumbNav";
 import { useQuizCourse } from "@/hooks/lms/student/useQuizCourse";
 import { Select } from "@/components/lms/shared";
+import { QuizSkillBreakdownPanel } from "@/components/lms/teacher/skills/SkillPanels";
 import {
   ArrowLeft, CheckCircle, FileText,
   User, Calendar, Award, MessageSquare,
@@ -103,6 +104,7 @@ export default function TeacherGradingPage() {
 
   const questionTypes = [...new Set(answers.map(a => a.question_type))];
 
+
   // ── Breadcrumb ─────────────────────────────────────────────────────────────
 
   const breadcrumbItems = [
@@ -160,6 +162,10 @@ export default function TeacherGradingPage() {
           </div>
         ))}
       </div>
+
+      {/* Which skill the class as a whole is weak at. Sits above the filters
+          because it frames what the teacher is about to read below. */}
+      {courseId && <QuizSkillBreakdownPanel courseId={courseId} quizId={quizId} />}
 
       {/* ── Filters card ── */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-5">

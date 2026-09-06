@@ -14,6 +14,7 @@ import MarkdownEditor from "@/components/markdown/MarkdownEditor";
 import MarkdownRenderer from "@/components/markdown/MarkdownRenderer";
 import AIRevisionPanel from "@/components/lms/teacher/AIRevisionPanel";
 import { useQuizCourse } from "@/hooks/lms/student/useQuizCourse";
+import { useSkills } from "@/hooks/lms/teacher/useSkills";
 import { useMarkdownImage } from "@/hooks/common/useMarkdownImage";
 import { useSetPageContext } from "@/hooks/common/usePageContext";
 import { Select } from "@/components/lms/shared";
@@ -63,6 +64,8 @@ interface Question {
   points: number;
   order_index: number;
   settings?: any;
+  skill_id?: number;
+  skill_name?: string;
   answer_options: any[];
   correct_answers: any[];
 }
@@ -138,6 +141,8 @@ export default function TeacherQuizManagePage() {
     points: number;
     explanation: string;
     is_required: boolean;
+    /** Empty string means the question carries no skill. */
+    skill_id: string;
     answer_options: AnswerOption[];
     correct_answers: CorrectAnswer[];
   }>({
@@ -147,6 +152,7 @@ export default function TeacherQuizManagePage() {
     points: 10,
     explanation: "",
     is_required: false,
+    skill_id: "",
     answer_options: [
       { option_text: "", is_correct: false, order_index: 1 },
       { option_text: "", is_correct: false, order_index: 2 },
@@ -154,6 +160,7 @@ export default function TeacherQuizManagePage() {
     correct_answers: [],
   });
   const { uploadImage, uploading: imageUploading } = useMarkdownImage();
+  const { options: skillOptions, loading: skillsLoading } = useSkills();
 
   // ── Load ──────────────────────────────────────────────────────────────────
 
@@ -198,6 +205,11 @@ export default function TeacherQuizManagePage() {
         order_index: questions.reduce((max, q) => Math.max(max, q.order_index || 0), 0) + 1,
         is_required: questionForm.is_required === true,
       };
+
+      // 0 clears the tag on update; on create we simply leave the field out.
+      const skillId = questionForm.skill_id ? Number(questionForm.skill_id) : 0;
+      if (editingQuestion) questionData.skill_id = skillId;
+      else if (skillId) questionData.skill_id = skillId;
 
       if (questionForm.question_html?.trim()) questionData.question_html = questionForm.question_html.trim();
       if (questionForm.explanation?.trim())  questionData.explanation  = questionForm.explanation.trim();
@@ -260,6 +272,7 @@ export default function TeacherQuizManagePage() {
             question_type: newQ.question_type, question_text: newQ.question_text,
             question_html: newQ.question_html || "", points: newQ.points,
             explanation: newQ.explanation || "", is_required: newQ.is_required || false,
+              skill_id: newQ.skill_id ? String(newQ.skill_id) : "",
             answer_options: newQ.answer_options || [], correct_answers: newQ.correct_answers || [],
           });
           setFillBlankSettings(newQ.settings || null);
@@ -290,6 +303,7 @@ export default function TeacherQuizManagePage() {
       question_type: q.question_type, question_text: q.question_text,
       question_html: q.question_html || "", points: q.points,
       explanation: "", is_required: false,
+      skill_id: q.skill_id ? String(q.skill_id) : "",
       answer_options: q.answer_options || [], correct_answers: q.correct_answers || [],
     });
     setFillBlankSettings(q.settings || null);
@@ -300,7 +314,7 @@ export default function TeacherQuizManagePage() {
   const resetQuestionForm = () => {
     setQuestionForm({
       question_type: "SINGLE_CHOICE", question_text: "", question_html: "",
-      points: 10, explanation: "", is_required: false,
+      points: 10, explanation: "", is_required: false, skill_id: "",
       answer_options: [
         { option_text: "", is_correct: false, order_index: 1 },
         { option_text: "", is_correct: false, order_index: 2 },
@@ -524,6 +538,15 @@ export default function TeacherQuizManagePage() {
                         {images.length > 0 && (
                           <span className="text-xs px-2.5 py-0.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 rounded-lg border border-emerald-300 dark:border-emerald-800 font-semibold">
                             🖼️ {images.length} ảnh
+                          </span>
+                        )}
+                        {q.skill_name ? (
+                          <span className="text-xs px-2.5 py-0.5 bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-300 rounded-lg border border-amber-200 dark:border-amber-800 font-semibold">
+                            {q.skill_name}
+                          </span>
+                        ) : (
+                          <span className="text-xs px-2.5 py-0.5 bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 rounded-lg border border-dashed border-slate-300 dark:border-slate-700">
+                            chưa gắn kỹ năng
                           </span>
                         )}
                       </div>
@@ -792,6 +815,21 @@ export default function TeacherQuizManagePage() {
                     <span className="text-sm font-bold text-slate-700 dark:text-slate-300 group-hover:text-blue-600 transition-colors">Bắt buộc trả lời</span>
                   </label>
                 </div>
+
+                  {/* Skill tag. An untagged question is left out of every
+                      per-skill breakdown, so the hint says so plainly. */}
+                  <div className="col-span-2">
+                    <Select
+                      label="Kỹ năng câu hỏi này đo"
+                      placeholder={skillsLoading ? "Đang tải kỹ năng..." : "Chưa gắn kỹ năng"}
+                      options={skillOptions}
+                      value={questionForm.skill_id}
+                      onValueChange={v => setQuestionForm(f => ({ ...f, skill_id: v }))}
+                      disabled={skillsLoading}
+                      clearable
+                      hint="Bỏ trống cũng được, nhưng câu hỏi sẽ không được tính vào phổ điểm theo kỹ năng."
+                    />
+                  </div>
               </div>
 
               {/* Legacy images (collapsible) */}
