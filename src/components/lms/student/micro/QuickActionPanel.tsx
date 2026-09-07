@@ -22,8 +22,6 @@
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import analyticsService from "@/services/lms/analyticsService";
-import FlashcardDeck from "./FlashcardDeck";
-import QuickCheck from "./QuickCheck";
 import AskAIDrawer from "./AskAIDrawer";
 import type { MicroLessonContext, QuickActionTab } from "./types";
 
@@ -54,17 +52,7 @@ export function QuickActionPanel({
         lang === "vi"
           ? "Hành động nhanh"
           : "Quick Actions",
-      flashcards: lang === "vi" ? "Thẻ ghi nhớ" : "Flashcards",
-      quickCheck: lang === "vi" ? "Kiểm tra nhanh" : "Quick Check",
       askAI: lang === "vi" ? "Hỏi AI" : "Ask AI",
-      flashcardsDesc:
-        lang === "vi"
-          ? "Ôn lại các thuật ngữ chính."
-          : "Review the key terms.",
-      quickCheckDesc:
-        lang === "vi"
-          ? "Trả lời 1–2 câu trắc nghiệm ngắn."
-          : "Answer 1–2 short multiple-choice questions.",
       askAIDesc:
         lang === "vi"
           ? "Trao đổi với AI về bài học này."
@@ -140,19 +128,7 @@ export function QuickActionPanel({
         )}
       </header>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-200 dark:divide-blue-500/10">
-        <ActionButton
-          active={tab === "flashcards"}
-          label={labels.flashcards}
-          desc={labels.flashcardsDesc}
-          onClick={() => openTab("flashcards")}
-        />
-        <ActionButton
-          active={tab === "quick_check"}
-          label={labels.quickCheck}
-          desc={labels.quickCheckDesc}
-          onClick={() => openTab("quick_check")}
-        />
+      <div className="grid grid-cols-1">
         <ActionButton
           active={askOpen}
           label={labels.askAI}
@@ -161,16 +137,6 @@ export function QuickActionPanel({
         />
       </div>
 
-      {tab === "flashcards" && (
-        <div className="border-t border-slate-200 dark:border-blue-500/10">
-          <FlashcardDeck ctx={ctx} />
-        </div>
-      )}
-      {tab === "quick_check" && (
-        <div className="border-t border-slate-200 dark:border-blue-500/10">
-          <QuickCheck ctx={ctx} />
-        </div>
-      )}
 
       <AskAIDrawer
         ctx={ctx}

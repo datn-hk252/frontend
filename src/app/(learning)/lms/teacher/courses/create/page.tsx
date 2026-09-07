@@ -1,16 +1,14 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import lmsService from "@/services/lms/lmsService";
 import { organizationService } from "@/services/admin/organizationService";
 import FileUpload from "@/components/lms/teacher/upload/FileUpload";
 import { FileInfo, Organization } from "@/types";
-import { CourseBlueprintWorkspace } from "@/components/lms/teacher/CourseBlueprintWorkspace";
-import { useCurrentUser } from "@/hooks/auth/useCurrentUser";
-import { Input, Textarea, PrimaryBtn, SecondaryBtn, Alert, CourseCard, RadioTileGroup, Select, TabBar, LmsPageHeader, BreadcrumbNav } from "@/components/lms/shared";
+import { Input, Textarea, PrimaryBtn, SecondaryBtn, Alert, CourseCard, RadioTileGroup, Select, LmsPageHeader, BreadcrumbNav } from "@/components/lms/shared";
 import { 
-  Wand2, FileEdit, PlusCircle, Trash2, Globe, Lock, Sparkles, CheckCircle2, Award, Building2, Save, AlertTriangle
+  PlusCircle, Trash2, Globe, Lock, Sparkles, CheckCircle2, Award, Building2, Save, AlertTriangle
 } from "lucide-react";
 
 const DRAFT_STORAGE_KEY = "lms_create_course_draft_v1";
@@ -22,15 +20,8 @@ const COURSE_LEVELS = [
   { value: "ALL_LEVELS", label: "Mọi cấp độ" }
 ];
 
-const WORKFLOW_TABS = [
-  { id: "manual", label: "Thủ công", icon: <FileEdit className="w-3.5 h-3.5" /> },
-  { id: "ai", label: "Tạo bằng AI (Sơ đồ)", icon: <Wand2 className="w-3.5 h-3.5" /> },
-];
-
 export default function CreateCoursePage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const blueprintId = searchParams.get("blueprint");
   const titleInputRef = useRef<HTMLInputElement>(null);
   const descriptionInputRef = useRef<HTMLTextAreaElement>(null);
   const [loading, setLoading] = useState(false);
@@ -38,11 +29,9 @@ export default function CreateCoursePage() {
   const [submitNotice, setSubmitNotice] = useState<{ type: "error" | "success"; message: string } | null>(null);
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [orgLoading, setOrgLoading] = useState(true);
-  const [aiWorkflow, setAiWorkflow] = useState(() => Boolean(blueprintId));
   const [hasDraftRestored, setHasDraftRestored] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
-  const { userId } = useCurrentUser();
 
   useEffect(() => {
     lmsService.getCategories()
@@ -268,24 +257,12 @@ export default function CreateCoursePage() {
             ]}
           />
         }
-        actions={
-          <TabBar
-            tabs={WORKFLOW_TABS}
-            active={aiWorkflow ? "ai" : "manual"}
-            onChange={(id) => {
-              setAiWorkflow(id === "ai");
-              setSubmitNotice(null);
-            }}
-            variant="pill"
-            size="sm"
-          />
-        }
       />
 
       {/* Main Content Workspace */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-grow space-y-6">
         {/* Draft Restoration Notice Banner */}
-        {hasDraftRestored && !aiWorkflow && (
+        {hasDraftRestored && (
           <div className="p-4 bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/40 rounded-2xl flex items-center justify-between gap-3 text-xs text-blue-800 dark:text-blue-200 animate-in fade-in duration-300">
             <div className="flex items-center gap-2">
               <Save className="w-4 h-4 text-blue-600 dark:text-cyan-400 flex-shrink-0" />
@@ -309,29 +286,6 @@ export default function CreateCoursePage() {
         )}
 
         {/* Content Areas */}
-        {aiWorkflow ? (
-          orgLoading ? (
-            <div className="flex h-64 items-center justify-center text-sm text-slate-500 font-medium animate-pulse">
-              Đang chuẩn bị không gian tạo khóa học bằng AI…
-            </div>
-          ) : (
-            <div className="animate-in fade-in slide-in-from-bottom-3 duration-400">
-              <CourseBlueprintWorkspace
-                userId={Number(userId)}
-                organizations={orgs}
-                blueprintId={blueprintId}
-                onOpenBlueprint={(id) => router.replace(`/lms/teacher/courses/create?blueprint=${encodeURIComponent(id)}`)}
-                onCancel={() => router.push("/lms/teacher/courses")}
-                onComplete={async (courseId) => {
-                  try {
-                    localStorage.removeItem(DRAFT_STORAGE_KEY);
-                  } catch {}
-                  router.push(`/lms/teacher/courses/${courseId}`);
-                }}
-              />
-            </div>
-          )
-        ) : (
           <form onSubmit={handleSubmit} className="w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
               
@@ -562,7 +516,6 @@ export default function CreateCoursePage() {
 
             </div>
           </form>
-        )}
       </div>
 
       {/* Unsaved Changes Warning Modal */}

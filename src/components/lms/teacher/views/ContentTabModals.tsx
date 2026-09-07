@@ -33,11 +33,6 @@ const BulkUploadModal = dynamic(
   { ssr: false }
 );
 
-const CourseMaterialRoutingModal = dynamic(
-  () => import("@/components/lms/teacher/upload/CourseMaterialRoutingModal"),
-  { ssr: false }
-);
-
 const GenerateMicroLessonsModal = dynamic(
   () => import("@/components/lms/teacher/micro/GenerateMicroLessonsModal").then((m) => ({ default: m.GenerateMicroLessonsModal })),
   { ssr: false }
@@ -94,7 +89,6 @@ interface ContentTabModalsProps {
   showSectionModal: boolean;
   showContentModal: boolean;
   showBulkModal: boolean;
-  showCourseRoutingModal: boolean;
   showEditContentModal: boolean;
   showContentViewer: boolean;
   showMicroModal: boolean;
@@ -119,7 +113,6 @@ interface ContentTabModalsProps {
   setShowContentModal: (show: boolean) => void;
   setSelectedSectionId: (id: number | null) => void;
   setShowBulkModal: (show: boolean) => void;
-  setShowCourseRoutingModal: (show: boolean) => void;
   setShowEditContentModal: (show: boolean) => void;
   setEditingContent: (c: Content | null) => void;
   setShowContentViewer: (show: boolean) => void;
@@ -135,7 +128,6 @@ interface ContentTabModalsProps {
   setShowOverviewHistoryModal: (show: boolean) => void;
   setExpanded: Dispatch<SetStateAction<Set<number>>>;
   onSectionsChange: Dispatch<SetStateAction<Section[]>>;
-  onSectionsRefetch: () => void;
   reloadSectionContent: (sectionId: number) => Promise<void>;
   setSectionContents: Dispatch<SetStateAction<Record<number, Content[]>>>;
 }
@@ -151,7 +143,6 @@ export function ContentTabModals({
   showSectionModal,
   showContentModal,
   showBulkModal,
-  showCourseRoutingModal,
   showEditContentModal,
   showContentViewer,
   showMicroModal,
@@ -175,7 +166,6 @@ export function ContentTabModals({
   setShowContentModal,
   setSelectedSectionId,
   setShowBulkModal,
-  setShowCourseRoutingModal,
   setShowEditContentModal,
   setEditingContent,
   setShowContentViewer,
@@ -191,26 +181,11 @@ export function ContentTabModals({
   setShowOverviewHistoryModal,
   setExpanded,
   onSectionsChange,
-  onSectionsRefetch,
   reloadSectionContent,
   setSectionContents,
 }: ContentTabModalsProps) {
   return (
     <>
-      {showCourseRoutingModal && (
-        <CourseMaterialRoutingModal
-          courseId={courseId}
-          sections={sections}
-          onClose={() => setShowCourseRoutingModal(false)}
-          onSuccess={() => {
-            setShowCourseRoutingModal(false);
-            onSectionsRefetch();
-            Object.keys(sectionContents).forEach((id) =>
-              reloadSectionContent(Number(id))
-            );
-          }}
-        />
-      )}
 
       {showSectionModal && (
         <SectionModal

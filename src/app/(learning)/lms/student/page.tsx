@@ -6,16 +6,13 @@ import { Alert } from "@/components/lms/shared";
 import { StudentCourseSidebar } from "@/components/lms/student/StudentCourseSidebar";
 import { StudentCourseAnalytics } from "@/components/lms/student/StudentCourseAnalytics";
 import { StudentDashboardHeader } from "@/components/lms/student/StudentDashboardHeader";
-import { PersonalizedLearningDashboard } from "@/components/lms/student/PersonalizedLearningDashboard";
-import { SkillMasteryOverview, StartLearningBanner } from "@/components/lms/student/SkillMasteryOverview";
+import { StartLearningBanner } from "@/components/lms/student/StartLearningBanner";
 import { useScrollSnap } from "@/hooks/common/useScrollSnap";
 import { useStudentDashboard } from "@/hooks/lms/student/useStudentDashboard";
 import { trackRecommendationEvent } from "@/services/lms/recommendationService";
-import { useAuth } from "@/hooks/auth/useAuth";
 
 export default function StudentDashboard() {
   const router = useRouter();
-  const { user } = useAuth();
 
   const headerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -97,11 +94,6 @@ export default function StudentDashboard() {
           </Alert>
         )}
 
-        {/* ── Skill progress belongs with the dashboard overview. ── */}
-        {user && (
-          <SkillMasteryOverview studentId={user.id} />
-        )}
-
         {/* ── Dashboard Layout ── */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* ── Left Column: Main Area (lg:col-span-8) ── */}
@@ -143,16 +135,6 @@ export default function StudentDashboard() {
             />
           </div>
         </div>
-
-        {/* Keep the daily recommendation panel below the primary dashboard content. */}
-        {user && (
-          <PersonalizedLearningDashboard
-            studentId={user.id}
-            onNavigateToLesson={(lessonId) => {
-              router.push(`/lms/student/lessons/${lessonId}`);
-            }}
-          />
-        )}
 
         {/* Onboarding Banner moved to the bottom of Dashboard */}
         <StartLearningBanner />
