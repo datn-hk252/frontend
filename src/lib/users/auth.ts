@@ -46,13 +46,3 @@ export function mapFrontendRoleToBackend(role: string, availableRoles?: RoleLike
   
   return "ROLE_" + r;
 }
-
-export function mapFrontendTeamToBackend(team: string): string {
-  if (!team) return "RESEARCH";
-  return team.toUpperCase();
-}
-
-export function mapFrontendTypeToBackend(type: string): string {
-  if (!type) return "CLC";
-  return type.toUpperCase();
-}

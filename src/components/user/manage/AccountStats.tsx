@@ -25,12 +25,7 @@ export default function AccountStats({ fullUserData }: AccountStatsProps) {
       <h3 className="text-lg font-bold text-slate-900 dark:text-slate-50 mb-5">
         Account Statistics
       </h3>
-      <div className="grid grid-cols-3 gap-4 divide-x divide-slate-100 dark:divide-slate-800">
-        <StatItem
-          value={fullUserData?.totalScore ?? 0}
-          label="Total Score"
-          colorClass="text-blue-600 dark:text-blue-400"
-        />
+      <div className="grid grid-cols-2 gap-4 divide-x divide-slate-100 dark:divide-slate-800">
         <StatItem
           value={fullUserData?.active ? "Active" : "Inactive"}
           label="Status"
@@ -41,8 +36,8 @@ export default function AccountStats({ fullUserData }: AccountStatsProps) {
           }
         />
         <StatItem
-          value={fullUserData?.team || "N/A"}
-          label="Team"
+          value={fullUserData?.code || "-"}
+          label="Mã số"
           colorClass="text-slate-700 dark:text-slate-300"
         />
       </div>

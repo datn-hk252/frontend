@@ -3,13 +3,10 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { User } from "@/types";
 import { UserAvatar } from "../UserAvatar";
-import { X, Pencil, Save, Loader2, Mail, Hash, Shield, Users, GraduationCap, Star, Calendar, Activity, Building2, Plus, Trash2 } from "lucide-react";
+import { X, Pencil, Save, Loader2, Mail, Hash, Shield, Calendar, Activity } from "lucide-react";
 import { updateUser, updateUserRole } from "@/lib/users/api";
-import { mapFrontendTeamToBackend, mapFrontendTypeToBackend } from "@/lib/users/auth";
 import { fetchRoles, Role } from "@/lib/admin/rolesApi";
 import LmsUserRoleManager from "@/components/lms/admin/LmsUserRoleManager";
-import { fetchPublicTeams, fetchPublicTypes, Team as APITeam, UserTypeOption } from "@/lib/admin/teamsTypesApi";
-import { organizationService } from "@/services/admin/organizationService";
 
 interface DetailModalProps {
   user: User | null;
@@ -54,13 +51,8 @@ export default function DetailModal({ user, onClose, isAdmin = false, onUserUpda
   // Edit form state
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
-  const [editTeam, setEditTeam] = useState("");
-  const [editType, setEditType] = useState("");
   const [editRole, setEditRole] = useState("");
-  const [editOrganization, setEditOrganization] = useState("");
   const [roles, setRoles] = useState<Role[]>([]);
-  const [organizations, setOrganizations] = useState<any[]>([]);
-  const [selectedOrgToAdd, setSelectedOrgToAdd] = useState("");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -83,94 +75,12 @@ export default function DetailModal({ user, onClose, isAdmin = false, onUserUpda
     }
   }, [user, saving, onClose]);
 
-  const getOrgIdByName = (name: string): number | undefined => {
-    const found = organizations.find(o => o.name === name);
-    return found ? found.id : undefined;
-  };
-
-  const handleRemoveOrg = async (orgName: string) => {
-    if (!user) return;
-    const orgId = getOrgIdByName(orgName);
-    if (!orgId) return;
-    if (!confirm(`Bạn có chắc muốn xóa người dùng khỏi tổ chức "${orgName}"?`)) return;
-    try {
-      await organizationService.removeMember(orgId, Number(user.id));
-      onUserUpdated?.();
-    } catch (e: any) {
-      console.error("Failed to remove member:", e);
-      alert(e?.message ?? "Xóa thất bại");
-    }
-  };
-
-  const handleAddOrg = async () => {
-    if (!user || !selectedOrgToAdd) return;
-    const orgId = getOrgIdByName(selectedOrgToAdd);
-    if (!orgId) return;
-    try {
-      await organizationService.addMember(orgId, {
-        user_id: Number(user.id),
-        org_role: "MEMBER"
-      });
-      setSelectedOrgToAdd("");
-      onUserUpdated?.();
-    } catch (e: any) {
-      console.error("Failed to add member:", e);
-      alert(e?.message ?? "Thêm thất bại");
-    }
-  };
-
-  // Dynamic teams & types
-  const [availableTeams, setAvailableTeams] = useState<APITeam[]>([
-    { id: 1, code: "RESEARCH", name: "Research" },
-    { id: 2, code: "ENGINEER", name: "Engineer" },
-    { id: 3, code: "EVENT", name: "Event" },
-    { id: 4, code: "MEDIA", name: "Media" }
-  ]);
-  const [availableTypes, setAvailableTypes] = useState<UserTypeOption[]>([
-    { id: 1, code: "CLC", name: "CLC" },
-    { id: 2, code: "DT", name: "DT" },
-    { id: 3, code: "TN", name: "TN" }
-  ]);
-
-  useEffect(() => {
-    fetchPublicTeams()
-      .then(data => {
-        if (data && data.length > 0) setAvailableTeams(data);
-      })
-      .catch(err => console.error("Failed to fetch dynamic teams:", err));
-
-    fetchPublicTypes()
-      .then(data => {
-        if (data && data.length > 0) setAvailableTypes(data);
-      })
-      .catch(err => console.error("Failed to fetch dynamic types:", err));
-
-    organizationService.list({ limit: 100 })
-      .then(res => setOrganizations(res.items || []))
-      .catch(err => console.error("Failed to fetch organizations:", err));
-  }, []);
-
-  const getTeamDisplayName = (teamCode: string) => {
-    if (!teamCode) return "";
-    const found = availableTeams.find(t => t.code.toUpperCase() === teamCode.toUpperCase());
-    return found ? found.name : teamCode;
-  };
-
-  const getTypeDisplayName = (typeCode: string) => {
-    if (!typeCode) return "";
-    const found = availableTypes.find(t => t.code.toUpperCase() === typeCode.toUpperCase());
-    return found ? found.name : typeCode;
-  };
-
   // Reset form state when user changes
   useEffect(() => {
     if (user) {
       setEditName(user.name);
       setEditEmail(user.email);
-      setEditTeam(user.team as string);
-      setEditType(user.type as string);
       setEditRole(user.role as string);
-      setEditOrganization(user.organization || "");
       setIsEditing(false);
       setSaveError(null);
       setSaveSuccess(false);
@@ -188,10 +98,7 @@ export default function DetailModal({ user, onClose, isAdmin = false, onUserUpda
   const handleStartEdit = () => {
     setEditName(user.name);
     setEditEmail(user.email);
-    setEditTeam(user.team as string);
-    setEditType(user.type as string);
     setEditRole(user.role as string);
-    setEditOrganization(user.organization || "");
     setSaveError(null);
     setSaveSuccess(false);
     setIsEditing(true);
@@ -220,9 +127,6 @@ export default function DetailModal({ user, onClose, isAdmin = false, onUserUpda
       await updateUser(user.id, {
         name: editName.trim(),
         email: editEmail.trim(),
-        team: mapFrontendTeamToBackend(editTeam),
-        type: mapFrontendTypeToBackend(editType),
-        organization: editOrganization.trim(),
       });
 
       setSaveSuccess(true);
@@ -368,137 +272,6 @@ export default function DetailModal({ user, onClose, isAdmin = false, onUserUpda
                 />
               </div>
 
-              {/* Team & Type row */}
-              <div className="grid grid-cols-2 gap-4">
-                {/* Team */}
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-                    Team
-                  </label>
-                  <select
-                    value={editTeam}
-                    onChange={(e) => setEditTeam(e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 
-                               bg-slate-50 dark:bg-slate-800 rounded-xl text-slate-900 dark:text-slate-50 
-                               focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 
-                               transition-all duration-200"
-                  >
-                    {availableTeams.map((t) => (
-                      <option key={t.code} value={t.code}>{t.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Type */}
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-                    Loại
-                  </label>
-                  <select
-                    value={editType}
-                    onChange={(e) => setEditType(e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 
-                               bg-slate-50 dark:bg-slate-800 rounded-xl text-slate-900 dark:text-slate-50 
-                               focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 
-                               transition-all duration-200"
-                  >
-                    {availableTypes.map((t) => (
-                      <option key={t.code} value={t.code}>{t.name}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Organization */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-                  Tổ chức (Organization)
-                </label>
-                <div className="flex gap-2">
-                  <select
-                    value={editOrganization}
-                    onChange={(e) => setEditOrganization(e.target.value)}
-                    className="flex-1 px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 
-                               bg-slate-50 dark:bg-slate-800 rounded-xl text-slate-900 dark:text-slate-50 
-                               focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 
-                               transition-all duration-200 text-sm"
-                  >
-                    <option value="">-- Chọn tổ chức --</option>
-                    {organizations.map((org) => (
-                      <option key={org.id} value={org.name}>{org.name}</option>
-                    ))}
-                  </select>
-                  <input
-                    type="text"
-                    placeholder="Hoặc tự nhập..."
-                    value={editOrganization}
-                    onChange={(e) => setEditOrganization(e.target.value)}
-                    className="flex-1 px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 
-                               bg-slate-50 dark:bg-slate-800 rounded-xl text-slate-900 dark:text-slate-50 
-                               focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 
-                               transition-all duration-200 text-sm"
-                  />
-                </div>
-              </div>
-
-              {/* Manage Member Organizations */}
-              <div className="pt-3 border-t border-slate-100 dark:border-slate-800/60">
-                <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                  Danh sách tổ chức thành viên (Member Organizations)
-                </label>
-                
-                {/* List current orgs */}
-                <div className="space-y-2 mb-3">
-                  {user.organizations && user.organizations.length > 0 ? (
-                    user.organizations.map((orgName) => (
-                      <div
-                        key={orgName}
-                        className="flex items-center justify-between px-3.5 py-2 bg-slate-50 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-800 rounded-xl text-sm"
-                      >
-                        <span className="text-slate-700 dark:text-slate-300 font-medium">{orgName}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveOrg(orgName)}
-                          className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors duration-150"
-                          title={`Xóa khỏi ${orgName}`}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-xs text-slate-400 italic">Chưa thuộc tổ chức nào</p>
-                  )}
-                </div>
-
-                {/* Add new org */}
-                <div className="flex items-center gap-2">
-                  <select
-                    value={selectedOrgToAdd}
-                    onChange={(e) => setSelectedOrgToAdd(e.target.value)}
-                    className="flex-1 px-3.5 py-2.5 border border-slate-300 dark:border-slate-700 
-                               bg-slate-50 dark:bg-slate-800 rounded-xl text-slate-900 dark:text-slate-50 
-                               focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 
-                               transition-all duration-200 text-sm"
-                  >
-                    <option value="">-- Chọn tổ chức để thêm --</option>
-                    {organizations
-                      .filter(org => !user.organizations?.includes(org.name))
-                      .map((org) => (
-                        <option key={org.id} value={org.name}>{org.name}</option>
-                      ))}
-                  </select>
-                  <button
-                    type="button"
-                    onClick={handleAddOrg}
-                    disabled={!selectedOrgToAdd}
-                    className="px-3.5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium text-sm flex items-center gap-1.5 transition-all duration-200 active:scale-95 shrink-0"
-                  >
-                    <Plus className="w-4 h-4" /> Thêm
-                  </button>
-                </div>
-              </div>
-
               {/* Read-only fields in edit mode */}
               <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-200 dark:border-slate-800">
                 <div>
@@ -550,39 +323,6 @@ export default function DetailModal({ user, onClose, isAdmin = false, onUserUpda
                   </div>
                 </div>
 
-                {/* Team */}
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg shrink-0">
-                    <Users className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Team</p>
-                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-50">{getTeamDisplayName(user.team as string)}</p>
-                  </div>
-                </div>
-
-                {/* Type */}
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg shrink-0">
-                    <GraduationCap className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Loại</p>
-                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-50">{getTypeDisplayName(user.type as string)}</p>
-                  </div>
-                </div>
-
-                {/* Score */}
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-blue-50 dark:bg-blue-950/40 rounded-lg shrink-0">
-                    <Star className="w-4 h-4 text-blue-500 dark:text-blue-400" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Điểm</p>
-                    <p className="text-sm font-bold text-blue-600 dark:text-blue-400">{user.score ?? 0}</p>
-                  </div>
-                </div>
-
                 {/* Date Added */}
                 <div className="flex items-start gap-3">
                   <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg shrink-0">
@@ -614,20 +354,6 @@ export default function DetailModal({ user, onClose, isAdmin = false, onUserUpda
                   </div>
                 </div>
 
-                {/* Organization */}
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg shrink-0">
-                    <Building2 className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Tổ chức</p>
-                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-50 truncate" title={user.organizations?.join(", ") || user.organization}>
-                      {user.organizations && user.organizations.length > 0
-                        ? user.organizations.join(", ")
-                        : (user.organization || "Chưa tham gia")}
-                    </p>
-                  </div>
-                </div>
               </div>
 
               {/* LMS Access (Admin Only) */}

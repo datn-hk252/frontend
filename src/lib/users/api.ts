@@ -24,8 +24,6 @@ export async function fetchUsers(params: {
   page?: number;
   pageSize?: number;
   query?: string;
-  team?: string;
-  type?: string;
   role?: string;
   sortBy?: string;
   sortDir?: "asc" | "desc";
@@ -35,8 +33,6 @@ export async function fetchUsers(params: {
     page_size: String(params.pageSize ?? 15),
   });
   if (params.query) searchParams.set("query", params.query);
-  if (params.team) searchParams.set("team", params.team);
-  if (params.type) searchParams.set("type", params.type);
   if (params.role) searchParams.set("role", params.role);
   if (params.sortBy) searchParams.set("sort_by", params.sortBy);
   if (params.sortDir) searchParams.set("sort_dir", params.sortDir);
@@ -73,11 +69,7 @@ export async function postBulkRegister(
     role?: string;
     roles?: string[];
     lmsRoles?: string[];
-    team: string;
     code?: string;
-    type: string;
-    organization?: string;
-    organizations?: Array<{ identifier: string; orgRole: "MEMBER" | "ADMIN" | "OWNER" }>;
   }>
 ) {
   const res = await fetch(`/apiv1/api/auth/register/bulk`, {
@@ -99,10 +91,7 @@ export async function postCreateUserSingle(user: {
   name: string;
   email: string;
   role: string;
-  team: string;
   code: string;
-  type: string;
-  organization?: string;
 }) {
   return postBulkRegister([user]);
 }
@@ -112,9 +101,6 @@ export async function updateUser(
   data: {
     name: string;
     email: string;
-    team?: string;
-    type?: string;
-    organization?: string;
   }
 ): Promise<User> {
   const res = await fetch(`/apiv1/api/users/${id}`, {

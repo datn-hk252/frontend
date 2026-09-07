@@ -3,12 +3,11 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import lmsService from "@/services/lms/lmsService";
-import { organizationService } from "@/services/admin/organizationService";
 import FileUpload from "@/components/lms/teacher/upload/FileUpload";
-import { FileInfo, Organization } from "@/types";
-import { Input, Textarea, PrimaryBtn, SecondaryBtn, Alert, CourseCard, RadioTileGroup, Select, LmsPageHeader, BreadcrumbNav } from "@/components/lms/shared";
-import { 
-  PlusCircle, Trash2, Globe, Lock, Sparkles, CheckCircle2, Award, Building2, Save, AlertTriangle
+import { FileInfo } from "@/types";
+import { Input, Textarea, PrimaryBtn, SecondaryBtn, Alert, CourseCard, Select, LmsPageHeader, BreadcrumbNav } from "@/components/lms/shared";
+import {
+  PlusCircle, Trash2, Sparkles, CheckCircle2, Award, Save, AlertTriangle
 } from "lucide-react";
 
 const DRAFT_STORAGE_KEY = "lms_create_course_draft_v1";
@@ -27,8 +26,6 @@ export default function CreateCoursePage() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitNotice, setSubmitNotice] = useState<{ type: "error" | "success"; message: string } | null>(null);
-  const [orgs, setOrgs] = useState<Organization[]>([]);
-  const [orgLoading, setOrgLoading] = useState(true);
   const [hasDraftRestored, setHasDraftRestored] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
@@ -45,8 +42,6 @@ export default function CreateCoursePage() {
     category: "",
     level: "BEGINNER",
     thumbnail_url: "",
-    visibility: "PUBLIC" as "PUBLIC" | "ORG_ONLY",
-    org_id: undefined as number | undefined,
   });
 
   // Check if form is modified/dirty
@@ -101,35 +96,6 @@ export default function CreateCoursePage() {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isDirty]);
 
-  useEffect(() => {
-    async function fetchOrgs() {
-      try {
-        setOrgLoading(true);
-        const list = await organizationService.getMyOrgs();
-        setOrgs(list);
-        if (list.length > 0) {
-          const defaultOrg = list.find(o => o.slug === "bdc") || list[0];
-          setFormData(prev => ({ ...prev, org_id: prev.org_id || defaultOrg.id }));
-        }
-      } catch (err) {
-        console.error("Failed to load organizations:", err);
-      } finally {
-        setOrgLoading(false);
-      }
-    }
-    fetchOrgs();
-  }, []);
-
-  const orgOptions = useMemo(() => {
-    if (orgs.length === 0) {
-      return [{ value: "", label: "Không thuộc tổ chức nào (Mặc định: Big Data Club)" }];
-    }
-    return orgs.map((org) => ({
-      value: String(org.id),
-      label: `${org.name} (${org.slug})`,
-    }));
-  }, [orgs]);
-
   const validateForm = useCallback(() => {
     const newErrors: Record<string, string> = {};
 
@@ -177,8 +143,9 @@ export default function CreateCoursePage() {
         category: formData.category || undefined,
         level: formData.level || undefined,
         thumbnail_url: formData.thumbnail_url ? formData.thumbnail_url : undefined,
-        visibility: formData.visibility,
-        org_id: formData.org_id,
+        // Every course is public: ORG_ONLY resolves through organization
+        // membership, and nothing populates that any more.
+        visibility: "PUBLIC",
       });
       
       // Clear draft on successful submission
@@ -227,12 +194,10 @@ export default function CreateCoursePage() {
       category: "",
       level: "BEGINNER",
       thumbnail_url: "",
-      visibility: "PUBLIC",
-      org_id: orgs.length > 0 ? (orgs.find(o => o.slug === "bdc") || orgs[0]).id : undefined,
     });
     setErrors({});
     setHasDraftRestored(false);
-  }, [orgs]);
+  }, []);
 
   const handleCancelClick = useCallback(() => {
     if (isDirty) {
@@ -370,46 +335,6 @@ export default function CreateCoursePage() {
                         options={COURSE_LEVELS}
                       />
                     </div>
-
-                    {/* Organization Select */}
-                    <div>
-                      {orgLoading ? (
-                        <div className="text-sm text-slate-500 animate-pulse py-2.5">Đang tải danh sách tổ chức...</div>
-                      ) : (
-                        <Select
-                          label="Tổ chức sở hữu"
-                          value={formData.org_id ? String(formData.org_id) : ""}
-                          onValueChange={(val) => setFormData({ ...formData, org_id: Number(val) })}
-                          icon={<Building2 className="w-4 h-4 text-slate-400" />}
-                          placeholder="Chọn tổ chức quản lý"
-                          options={orgOptions}
-                        />
-                      )}
-                      <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5 font-medium">
-                        Tổ chức được chọn sẽ giữ quyền quản trị và cấp quyền phân công giảng viên cho khóa học này.
-                      </p>
-                    </div>
-
-                    {/* Visibility Selector Tiles */}
-                    <RadioTileGroup
-                      label="Quyền truy cập & Hiển thị"
-                      value={formData.visibility}
-                      onChange={(val) => setFormData({ ...formData, visibility: val })}
-                      options={[
-                        {
-                          value: "PUBLIC",
-                          title: "Công khai (Public)",
-                          description: "Tất cả học viên trên hệ thống đều có thể tìm thấy và đăng ký học",
-                          icon: <Globe className="w-4 h-4" />,
-                        },
-                        {
-                          value: "ORG_ONLY",
-                          title: "Nội bộ (Organization Only)",
-                          description: "Chỉ các thành viên thuộc cùng tổ chức mới có quyền truy cập",
-                          icon: <Lock className="w-4 h-4" />,
-                        },
-                      ]}
-                    />
 
                     {/* Thumbnail Upload */}
                     <div>

@@ -11,7 +11,7 @@ export default function UserRow({ user, onClick, onToggleStatus, isAdmin }: { us
     >
       <div className="grid grid-cols-12 gap-2 sm:gap-4 items-center px-3 sm:px-6 py-3 sm:py-4">
         {/* Name & Email */}
-        <div className="col-span-3 flex items-center gap-3">
+        <div className="col-span-4 flex items-center gap-3">
           <UserAvatar name={user.name} src={user.profilePicture} className="w-8 h-8" />
           <div className="min-w-0">
             <div className="font-semibold text-sm sm:text-base text-slate-900 dark:text-slate-50 truncate">
@@ -24,25 +24,13 @@ export default function UserRow({ user, onClick, onToggleStatus, isAdmin }: { us
         </div>
 
         {/* Role */}
-        <div className="col-span-1 text-center text-sm text-slate-700 dark:text-slate-300">
-          {({ ROLE_ADMIN: "Admin", ROLE_MANAGER: "Manager", ROLE_USER: "Member", ROLE_ALUMNI: "Alumni" } as Record<string, string>)[user.role as string] || user.role}
+        <div className="col-span-2 text-center text-sm text-slate-700 dark:text-slate-300">
+          {({ ROLE_ADMIN: "Admin", ROLE_MANAGER: "Giáo viên", ROLE_USER: "Học viên" } as Record<string, string>)[user.role as string] || user.role}
         </div>
 
-        {/* Team */}
-        <div className="col-span-1 text-center text-sm text-slate-700 dark:text-slate-300">
-          {user.team}
-        </div>
-
-        {/* Org */}
-        <div className="col-span-2 text-center text-sm text-slate-700 dark:text-slate-300 truncate" title={user.organizations?.join(", ") || user.organization}>
-          {user.organizations && user.organizations.length > 0
-            ? user.organizations.join(", ")
-            : (user.organization || "-")}
-        </div>
-
-        {/* Score */}
-        <div className="col-span-1 text-center text-sm font-medium text-slate-900 dark:text-slate-50">
-          {user.score}
+        {/* Code */}
+        <div className="col-span-2 text-center text-sm text-slate-700 dark:text-slate-300 truncate" title={user.code}>
+          {user.code || "-"}
         </div>
 
         {/* Date Added */}

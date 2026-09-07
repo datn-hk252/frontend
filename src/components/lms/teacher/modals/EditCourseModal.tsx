@@ -1,12 +1,11 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import FileUpload from "@/components/lms/teacher/upload/FileUpload";
 import BaseModal from "@/components/lms/shared/BaseModal";
 import { Select } from "@/components/lms/shared/Select";
 import lmsService from "@/services/lms/lmsService";
-import { organizationService } from "@/services/admin/organizationService";
-import { Course, FileInfo, Organization } from "@/types";
+import { Course, FileInfo } from "@/types";
 import { toast } from "sonner";
 
 export function EditCourseModal({ course, onClose, onSuccess }: {
@@ -20,27 +19,8 @@ export function EditCourseModal({ course, onClose, onSuccess }: {
     category: course.category || "",
     level: course.level || "BEGINNER",
     thumbnail_url: course.thumbnail_url || "",
-    visibility: course.visibility || "PUBLIC" as "PUBLIC" | "ORG_ONLY",
-    org_id: course.org_id || undefined as number | undefined,
   });
-  const [orgs, setOrgs] = useState<Organization[]>([]);
-  const [orgLoading, setOrgLoading] = useState(true);
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    async function fetchOrgs() {
-      try {
-        setOrgLoading(true);
-        const list = await organizationService.getMyOrgs();
-        setOrgs(list);
-      } catch (err) {
-        console.error("Failed to load organizations:", err);
-      } finally {
-        setOrgLoading(false);
-      }
-    }
-    fetchOrgs();
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,8 +33,6 @@ export function EditCourseModal({ course, onClose, onSuccess }: {
         category: formData.category || undefined,
         level: formData.level || undefined,
         thumbnail_url: formData.thumbnail_url || undefined,
-        visibility: formData.visibility,
-        org_id: formData.org_id,
       });
       toast.success("Cập nhật khóa học thành công!");
       onSuccess();
@@ -144,34 +122,6 @@ export function EditCourseModal({ course, onClose, onSuccess }: {
             ]}
           />
         </div>
-        {/* Organization Select */}
-        <div>
-          {orgLoading ? (
-            <div className="text-xs text-slate-500 animate-pulse py-2">Đang tải danh sách tổ chức...</div>
-          ) : (
-            <Select
-              label="Tổ chức sở hữu"
-              required
-              value={formData.org_id ? String(formData.org_id) : ""}
-              onValueChange={(val) => setFormData({ ...formData, org_id: val ? Number(val) : undefined })}
-              placeholder={orgs.length === 0 ? "Không thuộc tổ chức nào (Mặc định: Big Data Club)" : "Chọn tổ chức..."}
-              options={orgs.map((org) => ({
-                value: String(org.id),
-                label: `${org.name} (${org.slug})`,
-              }))}
-            />
-          )}
-        </div>
-        {/* Visibility Select */}
-        <Select
-          label="Khả năng hiển thị"
-          value={formData.visibility}
-          onValueChange={(val) => setFormData({ ...formData, visibility: val as "PUBLIC" | "ORG_ONLY" })}
-          options={[
-            { value: "PUBLIC", label: "Công khai - Tất cả học viên" },
-            { value: "ORG_ONLY", label: "Nội bộ - Chỉ thành viên tổ chức" },
-          ]}
-        />
         <div className="space-y-1.5">
           <label className="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">Ảnh đại diện</label>
           <FileUpload
