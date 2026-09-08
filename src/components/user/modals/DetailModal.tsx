@@ -20,10 +20,9 @@ interface DetailModalProps {
 /* ── Helpers ──────────────────────────────────────────────────────── */
 function displayRole(role: string): string {
   const map: Record<string, string> = {
-    ROLE_ADMIN: "Admin",
-    ROLE_MANAGER: "Manager",
-    ROLE_USER: "Member",
-    ROLE_ALUMNI: "Alumni",
+    ROLE_ADMIN: "Quản trị viên",
+    ROLE_TEACHER: "Giáo viên",
+    ROLE_STUDENT: "Học viên",
   };
   return map[role] || role;
 }
@@ -32,10 +31,8 @@ function roleBadgeColor(role: string): string {
   switch (role) {
     case "ROLE_ADMIN":
       return "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800/50";
-    case "ROLE_MANAGER":
+    case "ROLE_TEACHER":
       return "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800/50";
-    case "ROLE_ALUMNI":
-      return "bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 border-violet-200 dark:border-violet-800/50";
     default:
       return "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800/50";
   }

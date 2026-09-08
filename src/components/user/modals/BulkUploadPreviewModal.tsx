@@ -66,7 +66,7 @@ export default function BulkUploadPreviewModal({ open, onClose, parsedUsers, onI
         name: u.name || "",
         email: u.email || "",
         code: u.code || "",
-        roles: u.roles || u.role || "ROLE_USER",
+        roles: u.roles || u.role || "ROLE_STUDENT",
         lmsRoles: u.lmsRoles || u.lms_roles || "",
       }));
       setUsers(mapped);
@@ -83,7 +83,7 @@ export default function BulkUploadPreviewModal({ open, onClose, parsedUsers, onI
         }).filter(Boolean).join(";");
         setUsers(current => current.map(user => ({
           ...user,
-          roles: resolveRoles(user.roles) || roleItems.find(role => role.name === "ROLE_USER")?.name || roleItems[0]?.name || "",
+          roles: resolveRoles(user.roles) || roleItems.find(role => role.name === "ROLE_STUDENT")?.name || roleItems[0]?.name || "",
         })));
       }).catch(err => {
         console.error("Failed to load import catalogs:", err);
@@ -108,7 +108,7 @@ export default function BulkUploadPreviewModal({ open, onClose, parsedUsers, onI
         name: "",
         email: "",
         code: "",
-        roles: "ROLE_USER",
+        roles: "ROLE_STUDENT",
         lmsRoles: "",
       }
     ]);

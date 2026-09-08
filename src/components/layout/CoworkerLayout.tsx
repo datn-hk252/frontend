@@ -89,8 +89,7 @@ export function CoworkerLayout({ children }: { children: React.ReactNode }) {
 
     if (user?.role) {
       const isAdminOrTeacher = 
-        user.role === "ROLE_ADMIN" || 
-        user.role === "ROLE_MANAGER" || 
+        user.role === "ROLE_ADMIN" ||
         user.role === "ROLE_TEACHER";
       
       setAgentType(isAdminOrTeacher ? "teacher" : "mentor");

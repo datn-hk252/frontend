@@ -38,7 +38,7 @@ function mapRow(r: Record<string, unknown>): ParsedRow {
   return {
     name: read("name"),
     email: read("email").toLowerCase(),
-    roles: read("roles") || "ROLE_USER",
+    roles: read("roles") || "ROLE_STUDENT",
     lmsRoles: read("lmsRoles"),
     code: read("code"),
   };
@@ -98,7 +98,7 @@ export function downloadUserImportTemplate(
       name: "Nguyễn Văn A",
       email: "nguyenvana@example.com",
       code: "HV001",
-      roles: "ROLE_USER",
+      roles: "ROLE_STUDENT",
       lms_roles: "LMS:TEACHER,STUDENT",
     },
   ]);
@@ -110,7 +110,7 @@ export function downloadUserImportTemplate(
     ["name", "Có", "Họ tên đầy đủ"],
     ["email", "Có", "Email duy nhất; hệ thống tự chuyển về chữ thường"],
     ["code", "Có", "Mã học viên hoặc mã giáo viên, duy nhất; giữ định dạng Text nếu có số 0 đầu"],
-    ["roles", "Có", "Quyền hệ thống. Học viên điền ROLE_USER, giáo viên điền ROLE_MANAGER"],
+    ["roles", "Có", "Quyền hệ thống. Học viên điền ROLE_STUDENT, giáo viên điền ROLE_TEACHER"],
     ["lms_roles", "Không", "Quyền LMS độc lập. Ví dụ LMS:TEACHER,STUDENT (chấp nhận dấu , hoặc ;). Hợp lệ: ADMIN, TEACHER, STUDENT"],
     [],
     ["Lưu ý", "Import là atomic: chỉ cần một dòng sai thì không user nào được tạo. Hãy sửa toàn bộ lỗi trong preview trước khi xác nhận."],

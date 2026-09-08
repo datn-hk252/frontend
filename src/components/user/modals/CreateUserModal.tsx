@@ -16,7 +16,7 @@ export default function CreateUserModal({ open, onClose, onUserCreated }: Create
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
-  const [role, setRole] = useState("ROLE_USER");
+  const [role, setRole] = useState("ROLE_STUDENT");
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +35,7 @@ export default function CreateUserModal({ open, onClose, onUserCreated }: Create
       setName("");
       setEmail("");
       setCode("");
-      setRole("ROLE_USER");
+      setRole("ROLE_STUDENT");
       setError(null);
       setSuccess(false);
     }

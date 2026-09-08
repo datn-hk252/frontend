@@ -1,4 +1,4 @@
-export type Role = "ROLE_ADMIN" | "ROLE_USER" | "ROLE_MANAGER" | (string & {});
+export type Role = "ROLE_ADMIN" | "ROLE_TEACHER" | "ROLE_STUDENT" | (string & {});
 export type ModalMode = "add" | "edit" | "view";
 
 export type UserLogin = {

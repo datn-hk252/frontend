@@ -7,13 +7,11 @@ export function mapFrontendRoleToBackend(role: string, availableRoles?: RoleLike
   if (!role) {
     if (availableRoles) {
       const defaultRole = availableRoles.find(
-        r => r.name.toUpperCase() === "ROLE_USER" || 
-             r.displayName.toLowerCase().includes("member") || 
-             r.displayName.toLowerCase().includes("user")
+        r => r.name.toUpperCase() === "ROLE_STUDENT" || r.name.toUpperCase() === "ROLE_USER"
       );
       if (defaultRole) return defaultRole.name;
     }
-    return "ROLE_USER";
+    return "ROLE_STUDENT";
   }
 
   const cleanRole = role.trim();
@@ -41,8 +39,8 @@ export function mapFrontendRoleToBackend(role: string, availableRoles?: RoleLike
   // Legacy text mapping for bulk upload CSV
   const lower = cleanRole.toLowerCase();
   if (lower.includes("admin")) return "ROLE_ADMIN";
-  if (lower.includes("manager")) return "ROLE_MANAGER";
-  if (lower.includes("user") || lower.includes("member")) return "ROLE_USER";
+  if (lower.includes("teacher") || lower.includes("manager")) return "ROLE_TEACHER";
+  if (lower.includes("student") || lower.includes("user") || lower.includes("member")) return "ROLE_STUDENT";
   
   return "ROLE_" + r;
 }
