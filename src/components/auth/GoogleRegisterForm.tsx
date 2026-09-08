@@ -3,20 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Spinner } from "@/components/icons/Icons";
-import { fetchPublicTeams, fetchPublicTypes } from "@/lib/admin/teamsTypesApi";
-
-const DEFAULT_TEAMS = [
-  { value: "RESEARCH", label: "Research" },
-  { value: "ENGINEER", label: "Engineer" },
-  { value: "EVENT", label: "Event" },
-  { value: "MEDIA", label: "Media" },
-];
-
-const DEFAULT_TYPES = [
-  { value: "CLC", label: "CLC" },
-  { value: "TN", label: "TN" },
-  { value: "DT", label: "ĐT" },
-];
 
 interface GoogleProfile {
   googleId: string;
@@ -31,15 +17,8 @@ export function GoogleRegisterForm() {
   const [profile, setProfile] = useState<GoogleProfile | null>(null);
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
-  const [team, setTeam] = useState("");
-  const [type, setType] = useState("");
-  const [organization, setOrganization] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const [teamsList, setTeamsList] = useState(DEFAULT_TEAMS);
-  const [typesList, setTypesList] = useState(DEFAULT_TYPES);
-  const [orgsList, setOrgsList] = useState<{ value: string; label: string }[]>([]);
 
   useEffect(() => {
     const stored = sessionStorage.getItem("googleProfile");
@@ -50,48 +29,13 @@ export function GoogleRegisterForm() {
     const parsed = JSON.parse(stored) as GoogleProfile;
     setProfile(parsed);
     setName(parsed.name || "");
-
-    // Fetch dynamic teams
-    fetchPublicTeams()
-      .then(data => {
-        if (data && data.length > 0) {
-          setTeamsList(data.map(t => ({ value: t.code, label: t.name })));
-        }
-      })
-      .catch(err => console.error("Failed to load public teams dynamically:", err));
-
-    // Fetch dynamic types
-    fetchPublicTypes()
-      .then(data => {
-        if (data && data.length > 0) {
-          setTypesList(data.map(t => ({ value: t.code, label: t.name })));
-        }
-      })
-      .catch(err => console.error("Failed to load public types dynamically:", err));
-
-    // Fetch dynamic organizations
-    fetch("/apiv1/api/organizations")
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          const list = data.map((o: any) => ({ value: o.name, label: o.name }));
-          setOrgsList(list);
-          if (list.length > 0) {
-            setOrganization(list[0].value);
-          }
-        }
-      })
-      .catch(err => console.error("Failed to load organizations:", err));
   }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (!code.trim()) return setError("Vui lòng nhập MSSV/Mã thành viên.");
-    if (!team) return setError("Vui lòng chọn ban.");
-    if (!type) return setError("Vui lòng chọn hệ đào tạo.");
-    if (!organization) return setError("Vui lòng chọn tổ chức.");
+    if (!code.trim()) return setError("Vui lòng nhập mã học viên.");
     if (!profile) return;
 
     setLoading(true);
@@ -103,9 +47,6 @@ export function GoogleRegisterForm() {
           idToken: profile.idToken,
           name: name.trim(),
           code: code.trim(),
-          team,
-          type,
-          organization,
         }),
       });
 
@@ -194,7 +135,7 @@ export function GoogleRegisterForm() {
         {/* Student code */}
         <div>
           <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-            MSSV / Mã thành viên
+            Mã học viên
           </label>
           <input
             type="text"
@@ -204,54 +145,6 @@ export function GoogleRegisterForm() {
             className={inputClasses}
             required
           />
-        </div>
-
-        {/* Organization */}
-        <div>
-          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Tổ chức</label>
-          <select
-            value={organization}
-            onChange={(e) => setOrganization(e.target.value)}
-            className={inputClasses}
-            required
-          >
-            <option value="" disabled>Chọn tổ chức</option>
-            {orgsList.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Team */}
-        <div>
-          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Ban</label>
-          <select
-            value={team}
-            onChange={(e) => setTeam(e.target.value)}
-            className={inputClasses}
-            required
-          >
-            <option value="" disabled>Chọn ban</option>
-            {teamsList.map((t) => (
-              <option key={t.value} value={t.value}>{t.label}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* Type */}
-        <div>
-          <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Hệ đào tạo</label>
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-            className={inputClasses}
-            required
-          >
-            <option value="" disabled>Chọn hệ</option>
-            {typesList.map((t) => (
-              <option key={t.value} value={t.value}>{t.label}</option>
-            ))}
-          </select>
         </div>
 
         <button

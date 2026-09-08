@@ -32,7 +32,7 @@ interface ContentTabProps {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function ContentTab({ courseId, sections, onSectionsChange, onSectionsRefetch }: ContentTabProps) {
+export function ContentTab({ courseId, sections, onSectionsChange }: ContentTabProps) {
   const [expanded, setExpanded]   = useState<Set<number>>(new Set());
   const [sectionContents, setSectionContents] = useState<Record<number, Content[]>>({});
   const [loadingContent, setLoadingContent]   = useState<Record<number, boolean>>({});
@@ -185,7 +185,6 @@ export function ContentTab({ courseId, sections, onSectionsChange, onSectionsRef
   const [editingSection, setEditingSection]           = useState<Section | null>(null);
   const [showContentModal, setShowContentModal]       = useState(false);
   const [showBulkModal, setShowBulkModal]             = useState(false);
-  const [showCourseRoutingModal, setShowCourseRoutingModal] = useState(false);
   const [showEditContentModal, setShowEditContentModal] = useState(false);
   const [showContentViewer, setShowContentViewer]     = useState(false);
   const [selectedSectionId, setSelectedSectionId]     = useState<number | null>(null);
@@ -319,7 +318,6 @@ export function ContentTab({ courseId, sections, onSectionsChange, onSectionsRef
             setQuizPresetSectionId(undefined);
             setShowQuizModal(true);
           }}
-          onOpenCourseRoutingModal={() => setShowCourseRoutingModal(true)}
           onOpenMicroHistoryModal={() => setShowMicroHistoryModal(true)}
           onOpenQuizHistoryModal={() => setShowQuizHistoryModal(true)}
         />
@@ -465,7 +463,6 @@ export function ContentTab({ courseId, sections, onSectionsChange, onSectionsRef
           showSectionModal={showSectionModal}
           showContentModal={showContentModal}
           showBulkModal={showBulkModal}
-          showCourseRoutingModal={showCourseRoutingModal}
           showEditContentModal={showEditContentModal}
           showContentViewer={showContentViewer}
           showMicroModal={showMicroModal}
@@ -488,7 +485,6 @@ export function ContentTab({ courseId, sections, onSectionsChange, onSectionsRef
           setShowContentModal={setShowContentModal}
           setSelectedSectionId={setSelectedSectionId}
           setShowBulkModal={setShowBulkModal}
-          setShowCourseRoutingModal={setShowCourseRoutingModal}
           setShowEditContentModal={setShowEditContentModal}
           setEditingContent={setEditingContent}
           setShowContentViewer={setShowContentViewer}
@@ -504,7 +500,6 @@ export function ContentTab({ courseId, sections, onSectionsChange, onSectionsRef
           setShowOverviewHistoryModal={setShowOverviewHistoryModal}
           setExpanded={setExpanded}
           onSectionsChange={onSectionsChange}
-          onSectionsRefetch={onSectionsRefetch}
           reloadSectionContent={reloadSectionContent}
           setSectionContents={setSectionContents}
         />

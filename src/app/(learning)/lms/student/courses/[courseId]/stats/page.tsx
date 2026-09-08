@@ -3,22 +3,11 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { HelpCircle, CheckCircle2, AlertCircle, Lock, BookOpen, Award, Target, BarChart2 } from "lucide-react";
-import dynamic from "next/dynamic";
 
 import analyticsService, { StudentQuizScore } from "@/services/lms/analyticsService";
 import { useStudentCourse } from "@/components/lms/student/StudentCourseContext";
 import { StatCard, ProgressBar } from "@/components/lms/shared";
 import { cn } from "@/lib/utils";
-
-const WeaknessTracker = dynamic(
-  () => import("@/components/lms/student/WeaknessTracker").then((m) => m.WeaknessTracker),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="h-48 bg-white dark:bg-[#0F1E35] border border-slate-200 dark:border-blue-500/10 rounded-2xl p-6 animate-pulse" />
-    ),
-  }
-);
 
 // ─── Progress Item Row ────────────────────────────────────────────────────────
 
@@ -285,7 +274,6 @@ export default function StatsPage() {
         )}
       </section>
 
-      <WeaknessTracker courseId={id} />
     </div>
   );
 }

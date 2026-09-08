@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Plus, Sparkles, ChevronDown, History, HelpCircle, Upload } from "lucide-react";
+import { Plus, Sparkles, ChevronDown, History, HelpCircle } from "lucide-react";
 import { PrimaryBtn } from "@/components/lms/shared";
 
 interface ContentTabHeaderProps {
@@ -12,7 +12,6 @@ interface ContentTabHeaderProps {
   onOpenAddSection: () => void;
   onOpenMicroModal: () => void;
   onOpenQuizModal: () => void;
-  onOpenCourseRoutingModal: () => void;
   onOpenMicroHistoryModal: () => void;
   onOpenQuizHistoryModal: () => void;
 }
@@ -25,7 +24,6 @@ export function ContentTabHeader({
   onOpenAddSection,
   onOpenMicroModal,
   onOpenQuizModal,
-  onOpenCourseRoutingModal,
   onOpenMicroHistoryModal,
   onOpenQuizHistoryModal,
 }: ContentTabHeaderProps) {
@@ -126,20 +124,6 @@ export function ContentTabHeader({
                   </div>
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => { setIsAiMenuOpen(false); onOpenCourseRoutingModal(); }}
-                  disabled={!hasSections}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-blue-600 dark:hover:text-cyan-400 transition-colors text-left disabled:opacity-40 cursor-pointer"
-                >
-                  <Upload className="w-4 h-4 text-indigo-500" />
-                  <div>
-                    <div className="font-bold">Upload chung & AI Phân chương</div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-tight">
-                      AI tự phân bổ tài liệu vào chương
-                    </div>
-                  </div>
-                </button>
 
                 <div className="border-t border-slate-100 dark:border-slate-800 my-1 pt-1">
                   <span className="px-3 py-1 text-xs font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 block">

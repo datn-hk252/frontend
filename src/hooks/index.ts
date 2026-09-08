@@ -12,7 +12,6 @@ export * from "./common/usePageContext";
 
 // LMS hooks
 export * from "./lms/admin/useAdminStats";
-export * from "./lms/admin/useLlmConfig";
 export * from "./lms/student/useStudentDashboard";
 export * from "./lms/student/useQuizCourse";
 export * from "./lms/student/useForumPost";

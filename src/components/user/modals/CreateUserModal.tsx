@@ -3,10 +3,8 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, Loader2, Save, Building2 } from "lucide-react";
 import { postBulkRegister } from "@/lib/users/api";
-import { mapFrontendRoleToBackend, mapFrontendTeamToBackend, mapFrontendTypeToBackend } from "@/lib/users/auth";
+import { mapFrontendRoleToBackend } from "@/lib/users/auth";
 import { fetchRoles, Role } from "@/lib/admin/rolesApi";
-import { organizationService } from "@/services/admin/organizationService";
-import { fetchPublicTeams, fetchPublicTypes, Team as APITeam, UserTypeOption } from "@/lib/admin/teamsTypesApi";
 
 interface CreateUserModalProps {
   open: boolean;
@@ -18,28 +16,13 @@ export default function CreateUserModal({ open, onClose, onUserCreated }: Create
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
-  const [team, setTeam] = useState("RESEARCH");
-  const [type, setType] = useState("CLC");
-  const [role, setRole] = useState("ROLE_USER");
-  const [organization, setOrganization] = useState("");
+  const [role, setRole] = useState("ROLE_STUDENT");
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
   const [roles, setRoles] = useState<Role[]>([]);
-  const [organizations, setOrganizations] = useState<any[]>([]);
-  const [availableTeams, setAvailableTeams] = useState<APITeam[]>([
-    { id: 1, code: "RESEARCH", name: "Research" },
-    { id: 2, code: "ENGINEER", name: "Engineer" },
-    { id: 3, code: "EVENT", name: "Event" },
-    { id: 4, code: "MEDIA", name: "Media" }
-  ]);
-  const [availableTypes, setAvailableTypes] = useState<UserTypeOption[]>([
-    { id: 1, code: "CLC", name: "CLC" },
-    { id: 2, code: "DT", name: "DT" },
-    { id: 3, code: "TN", name: "TN" }
-  ]);
 
   useEffect(() => {
     if (open) {
@@ -48,28 +31,11 @@ export default function CreateUserModal({ open, onClose, onUserCreated }: Create
         .then(setRoles)
         .catch(err => console.error("Failed to fetch roles:", err));
 
-      // Fetch organizations
-      organizationService.list({ limit: 100 })
-        .then(res => setOrganizations(res.items || []))
-        .catch(err => console.error("Failed to fetch organizations:", err));
-
-      // Fetch teams & types
-      fetchPublicTeams()
-        .then(data => { if (data && data.length > 0) setAvailableTeams(data); })
-        .catch(err => console.error("Failed to fetch teams:", err));
-
-      fetchPublicTypes()
-        .then(data => { if (data && data.length > 0) setAvailableTypes(data); })
-        .catch(err => console.error("Failed to fetch types:", err));
-
       // Reset form
       setName("");
       setEmail("");
       setCode("");
-      setTeam("RESEARCH");
-      setType("CLC");
-      setRole("ROLE_USER");
-      setOrganization("");
+      setRole("ROLE_STUDENT");
       setError(null);
       setSuccess(false);
     }
@@ -109,10 +75,7 @@ export default function CreateUserModal({ open, onClose, onUserCreated }: Create
         name: name.trim(),
         email: email.trim().toLowerCase(),
         role: mapFrontendRoleToBackend(role, roles),
-        team: mapFrontendTeamToBackend(team),
         code: code.trim(),
-        type: mapFrontendTypeToBackend(type),
-        organization: organization.trim(),
       }];
 
       const res = await postBulkRegister(payload);
@@ -225,39 +188,6 @@ export default function CreateUserModal({ open, onClose, onUserCreated }: Create
             />
           </div>
 
-          {/* Team & Type */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-                Team
-              </label>
-              <select
-                value={team}
-                onChange={(e) => setTeam(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-xl text-slate-900 dark:text-slate-50 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all duration-200 text-sm"
-              >
-                {availableTeams.map((t) => (
-                  <option key={t.code} value={t.code}>{t.name}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-                Loại (Type)
-              </label>
-              <select
-                value={type}
-                onChange={(e) => setType(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-xl text-slate-900 dark:text-slate-50 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all duration-200 text-sm"
-              >
-                {availableTypes.map((t) => (
-                  <option key={t.code} value={t.code}>{t.name}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
           {/* Role */}
           <div>
             <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
@@ -274,31 +204,6 @@ export default function CreateUserModal({ open, onClose, onUserCreated }: Create
             </select>
           </div>
 
-          {/* Organization Selection */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-              Tổ chức (Organization)
-            </label>
-            <div className="flex gap-2">
-              <select
-                value={organization}
-                onChange={(e) => setOrganization(e.target.value)}
-                className="flex-1 px-3 py-2 border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-xl text-slate-900 dark:text-slate-50 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all duration-200 text-sm"
-              >
-                <option value="">-- Chọn tổ chức (Không bắt buộc) --</option>
-                {organizations.map((org) => (
-                  <option key={org.id} value={org.name}>{org.name}</option>
-                ))}
-              </select>
-              <input
-                type="text"
-                placeholder="Hoặc tự nhập tên..."
-                value={organization}
-                onChange={(e) => setOrganization(e.target.value)}
-                className="flex-1 px-3 py-2 border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-xl text-slate-900 dark:text-slate-50 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all duration-200 text-sm"
-              />
-            </div>
-          </div>
         </form>
 
         {/* Footer */}

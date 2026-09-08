@@ -30,4 +30,5 @@ export interface MicroLessonContext {
   language?: "vi" | "en";
 }
 
-export type QuickActionTab = "flashcards" | "quick_check" | "ask_ai" | null;
+// Thẻ ghi nhớ và kiểm tra nhanh cần ai-service nên đã tách ra khỏi đường chạy chính.
+export type QuickActionTab = "ask_ai" | null;

@@ -17,18 +17,16 @@ function UserRowSkeleton() {
   return (
     <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 animate-pulse min-w-max sm:min-w-full">
       <div className="grid grid-cols-12 gap-2 sm:gap-4 items-center">
-        <div className="col-span-3 flex items-center gap-3">
+        <div className="col-span-4 flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-850" />
           <div className="flex-1 min-w-0 space-y-2">
             <div className="h-4 bg-slate-200 dark:bg-slate-850 rounded w-3/4" />
             <div className="h-3 bg-slate-200 dark:bg-slate-850 rounded w-1/2" />
           </div>
         </div>
-        <div className="col-span-1"><div className="h-4 bg-slate-200 dark:bg-slate-850 rounded mx-auto w-2/3" /></div>
-        <div className="col-span-1"><div className="h-4 bg-slate-200 dark:bg-slate-850 rounded mx-auto w-1/2" /></div>
-        <div className="col-span-2"><div className="h-4 bg-slate-200 dark:bg-slate-850 rounded mx-auto w-3/4" /></div>
-        <div className="col-span-1"><div className="h-4 bg-slate-200 dark:bg-slate-850 rounded mx-auto w-1/3" /></div>
+        <div className="col-span-2"><div className="h-4 bg-slate-200 dark:bg-slate-850 rounded mx-auto w-2/3" /></div>
         <div className="col-span-2"><div className="h-4 bg-slate-200 dark:bg-slate-850 rounded mx-auto w-1/2" /></div>
+        <div className="col-span-2"><div className="h-4 bg-slate-200 dark:bg-slate-850 rounded mx-auto w-3/4" /></div>
         <div className="col-span-2 flex justify-center gap-3">
           <div className="h-6 w-11 bg-slate-200 dark:bg-slate-850 rounded-full" />
           <div className="h-4 bg-slate-200 dark:bg-slate-850 rounded w-12" />
@@ -46,8 +44,6 @@ export default function UserApp() {
 
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [teamFilter, setTeamFilter] = useState("");
-  const [typeFilter, setTypeFilter] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -58,7 +54,7 @@ export default function UserApp() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [previewUsers, setPreviewUsers] = useState<any[] | null>(null);
 
-  const [sortKey, setSortKey] = useState<"name" | "role" | "team" | "score" | "dateAdded" | "status" | "organization" | null>(null);
+  const [sortKey, setSortKey] = useState<"name" | "role" | "code" | "dateAdded" | "status" | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc" | null>(null);
 
   // simple sort toggler
@@ -80,25 +76,21 @@ export default function UserApp() {
   // Reset to page 1 when query/filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedQuery, teamFilter, typeFilter, roleFilter, sortKey, sortDir]);
+  }, [debouncedQuery, roleFilter, sortKey, sortDir]);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const sortField = sortKey === "score"
-        ? "totalScore"
-        : sortKey === "status"
-          ? "active"
-          : sortKey === "dateAdded" || !sortKey
-            ? "id"
-            : sortKey;
+      const sortField = sortKey === "status"
+        ? "active"
+        : sortKey === "dateAdded" || !sortKey
+          ? "id"
+          : sortKey;
       const result = await fetchUsers({
         page: currentPage - 1,
         pageSize: 15,
         query: debouncedQuery,
-        team: teamFilter,
-        type: typeFilter,
         role: roleFilter,
         sortBy: sortField,
         sortDir: sortDir || "desc",
@@ -115,7 +107,7 @@ export default function UserApp() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, debouncedQuery, teamFilter, typeFilter, roleFilter, sortKey, sortDir]);
+  }, [currentPage, debouncedQuery, roleFilter, sortKey, sortDir]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -141,19 +133,11 @@ export default function UserApp() {
 
   async function handleDownloadTemplate() {
     try {
-      const [{ downloadUserImportTemplate }, { fetchRoles }, { fetchPublicTeams, fetchPublicTypes }, { organizationService }] = await Promise.all([
+      const [{ downloadUserImportTemplate }, { fetchRoles }] = await Promise.all([
         import("@/lib/users/fileParser"),
         import("@/lib/admin/rolesApi"),
-        import("@/lib/admin/teamsTypesApi"),
-        import("@/services/admin/organizationService"),
       ]);
-      const [roles, teams, types, organizationPage] = await Promise.all([
-        fetchRoles(),
-        fetchPublicTeams(),
-        fetchPublicTypes(),
-        organizationService.list({ limit: 10000 }),
-      ]);
-      downloadUserImportTemplate(roles, teams, types, organizationPage.items);
+      downloadUserImportTemplate(await fetchRoles());
     } catch (err: any) {
       alert(`Không thể tạo file mẫu: ${err?.message || err}`);
     }
@@ -175,12 +159,6 @@ export default function UserApp() {
   }
 
   // Extract unique filter values dynamically from loaded users
-  const uniqueTeams = useMemo(() => {
-    return Array.from(new Set(users.map(u => u.team).filter(Boolean))).sort() as string[];
-  }, [users]);
-  const uniqueTypes = useMemo(() => {
-    return Array.from(new Set(users.map(u => u.type).filter(Boolean))).sort() as string[];
-  }, [users]);
   const uniqueRoles = useMemo(() => {
     return Array.from(new Set(users.map(u => u.role).filter(Boolean))).sort() as string[];
   }, [users]);
@@ -224,30 +202,6 @@ export default function UserApp() {
 
             {/* Filters & Actions */}
             <div className="flex flex-wrap gap-3 w-full lg:w-auto">
-              {/* Team Filter - dynamic from data */}
-              <select
-                value={teamFilter}
-                onChange={(e) => setTeamFilter(e.target.value)}
-                className="px-3 py-2.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl text-slate-900 dark:text-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
-              >
-                <option value="">All teams</option>
-                {uniqueTeams.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-
-              {/* Type Filter - dynamic from data */}
-              <select
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                className="px-3 py-2.5 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl text-slate-900 dark:text-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
-              >
-                <option value="">All types</option>
-                {uniqueTypes.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-
               {/* Role Filter - dynamic from data */}
               <select
                 value={roleFilter}
@@ -309,7 +263,7 @@ export default function UserApp() {
           <div className="grid grid-cols-12 gap-2 sm:gap-4 items-center px-4 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 min-w-max sm:min-w-full">
             <button
               onClick={() => toggleSort("name")}
-              className="col-span-3 text-left flex items-center gap-2 hover:text-slate-900 dark:hover:text-slate-100 transition-colors duration-200"
+              className="col-span-4 text-left flex items-center gap-2 hover:text-slate-900 dark:hover:text-slate-100 transition-colors duration-200"
             >
               <span>Username</span>
               {sortKey === "name" && (
@@ -320,27 +274,15 @@ export default function UserApp() {
             </button>
             <button
               onClick={() => toggleSort("role")}
-              className="col-span-1 text-center hover:text-slate-900 dark:hover:text-slate-100 transition-colors duration-200"
+              className="col-span-2 text-center hover:text-slate-900 dark:hover:text-slate-100 transition-colors duration-200"
             >
               Role {sortKey === "role" && (sortDir === "asc" ? "▲" : "▼")}
             </button>
             <button
-              onClick={() => toggleSort("team")}
-              className="col-span-1 text-center hover:text-slate-900 dark:hover:text-slate-100 transition-colors duration-200"
-            >
-              Team {sortKey === "team" && (sortDir === "asc" ? "▲" : "▼")}
-            </button>
-            <button
-              onClick={() => toggleSort("organization")}
+              onClick={() => toggleSort("code")}
               className="col-span-2 text-center hover:text-slate-900 dark:hover:text-slate-100 transition-colors duration-200"
             >
-              Org {sortKey === "organization" && (sortDir === "asc" ? "▲" : "▼")}
-            </button>
-            <button
-              onClick={() => toggleSort("score")}
-              className="col-span-1 text-center hover:text-slate-900 dark:hover:text-slate-100 transition-colors duration-200"
-            >
-              Score {sortKey === "score" && (sortDir === "asc" ? "▲" : "▼")}
+              Mã số {sortKey === "code" && (sortDir === "asc" ? "▲" : "▼")}
             </button>
             <button
               onClick={() => toggleSort("dateAdded")}
