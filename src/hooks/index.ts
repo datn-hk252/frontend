@@ -17,7 +17,5 @@ export * from "./lms/student/useQuizCourse";
 export * from "./lms/student/useForumPost";
 export * from "./lms/student/useQuizTaking";
 export * from "./lms/student/useQuizHistory";
-export * from "./lms/student/useCourseDiscover";
-export * from "./lms/student/useCourseDiscoverDetail";
 export * from "./lms/teacher/useAIIndexPoller";
 export * from "./lms/agent/useAgentChat";

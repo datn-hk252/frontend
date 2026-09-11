@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Target, Award, ChevronRight, Search } from "lucide-react";
+import { Target, Award, ChevronRight } from "lucide-react";
 import { PrimaryBtn } from "../shared/Button";
 
 interface FocusCourse {
@@ -15,7 +15,6 @@ interface FocusCardProps {
   totalCount: number;
   loading?: boolean;
   onNavigateToCourse?: (courseId: number) => void;
-  onNavigateToDiscover?: () => void;
 }
 
 export function FocusCard({
@@ -23,7 +22,6 @@ export function FocusCard({
   totalCount,
   loading = false,
   onNavigateToCourse,
-  onNavigateToDiscover,
 }: FocusCardProps) {
   if (loading) {
     return (
@@ -96,13 +94,9 @@ export function FocusCard({
                     Đã hoàn thành toàn bộ khóa học đã đăng ký.
                   </p>
                 </div>
-                <PrimaryBtn
-                  onClick={onNavigateToDiscover}
-                  className="w-full mt-1 text-xs py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl active:scale-[0.97] flex items-center justify-center gap-1.5"
-                  icon={<Search className="w-3.5 h-3.5" />}
-                >
-                  Tìm khóa học mới
-                </PrimaryBtn>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Liên hệ trung tâm để được xếp vào lớp tiếp theo.
+                </p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -112,16 +106,9 @@ export function FocusCard({
                 <div>
                   <h4 className="text-xs font-bold text-slate-750 dark:text-slate-250">Thiết lập mục tiêu</h4>
                   <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
-                    Đăng ký khóa học mới để bắt đầu
+                    Bạn sẽ thấy mục tiêu khi được xếp vào lớp
                   </p>
                 </div>
-                <PrimaryBtn
-                  onClick={onNavigateToDiscover}
-                  className="w-full mt-1 text-xs py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl active:scale-[0.97] flex items-center justify-center gap-1.5"
-                  icon={<Search className="w-3.5 h-3.5" />}
-                >
-                  Đăng ký học ngay
-                </PrimaryBtn>
               </div>
             )}
           </div>

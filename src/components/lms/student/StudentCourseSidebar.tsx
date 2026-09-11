@@ -6,7 +6,6 @@ import { BookOpen, Search } from "lucide-react";
 import {
   EmptyState,
   PageLoader,
-  PrimaryBtn,
   ProgressCard,
   SearchBar,
   Select,
@@ -27,7 +26,6 @@ interface StudentCourseSidebarProps {
   setCourseStatusFilter: (filter: "ALL" | "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED") => void;
   courseSortOrder: "recommended" | "desc" | "asc";
   setCourseSortOrder: (order: "recommended" | "desc" | "asc") => void;
-  onNavigateToDiscover: () => void;
   onNavigateToCourse: (courseId: number) => void;
 }
 
@@ -44,7 +42,6 @@ export function StudentCourseSidebar({
   setCourseStatusFilter,
   courseSortOrder,
   setCourseSortOrder,
-  onNavigateToDiscover,
   onNavigateToCourse,
 }: StudentCourseSidebarProps) {
   return (
@@ -109,13 +106,8 @@ export function StudentCourseSidebar({
       ) : acceptedEnrollments.length === 0 ? (
         <EmptyState
           icon={<BookOpen className="w-10 h-10 text-slate-400" />}
-          title="Chưa đăng ký môn nào"
-          description="Hãy khám phá và đăng ký khóa học phù hợp với bạn để bắt đầu."
-          action={
-            <PrimaryBtn icon={<Search className="w-4 h-4" />} onClick={onNavigateToDiscover}>
-              Khám phá khóa học
-            </PrimaryBtn>
-          }
+          title="Chưa được xếp lớp"
+          description="Học liệu sẽ xuất hiện ở đây sau khi trung tâm xếp bạn vào lớp."
         />
       ) : filteredAndSortedEnrollments.length === 0 ? (
         <div className="text-center py-8 bg-slate-50/50 dark:bg-[#0D192E]/20 rounded-2xl border border-dashed border-slate-250 dark:border-blue-500/10">

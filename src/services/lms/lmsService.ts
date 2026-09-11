@@ -245,7 +245,7 @@ class LMSService {
   async createContent(
     sectionId: number,
     contentData: {
-      type: "TEXT" | "VIDEO" | "DOCUMENT" | "IMAGE" | "QUIZ" | "FORUM" | "ANNOUNCEMENT";
+      type: "TEXT" | "VIDEO" | "AUDIO" | "DOCUMENT" | "IMAGE" | "QUIZ" | "FORUM" | "ANNOUNCEMENT";
       title: string;
       description?: string;
       order_index: number;
@@ -313,11 +313,9 @@ class LMSService {
 
   // ─── Enrollment ───────────────────────────────────────────────────────────
 
-  async enrollCourse(courseId: number) {
-    const response = await lmsApiClient.post("/enrollments", { course_id: courseId });
-    return response.data;
-  }
-
+  // A learner no longer enrols themselves. Class membership is what grants a
+  // course, and the class API writes the enrolment row alongside the roster,
+  // so the only call left here is the read.
   async getMyEnrollments(status?: "WAITING" | "ACCEPTED" | "REJECTED") {
     const params = status ? { status } : {};
     const response = await lmsApiClient.get("/enrollments/my", { params });
@@ -328,32 +326,6 @@ class LMSService {
     const params = status ? { status } : {};
     const response = await lmsApiClient.get(`/courses/${courseId}/learners`, { params });
     return response.data?.data;
-  }
-
-  async acceptEnrollment(enrollmentId: number, courseId: number) {
-    const response = await lmsApiClient.put(`/enrollments/${enrollmentId}/accept`, {
-      course_id: courseId,
-    });
-    return response.data;
-  }
-
-  async rejectEnrollment(enrollmentId: number, courseId: number) {
-    const response = await lmsApiClient.put(`/enrollments/${enrollmentId}/reject`, {
-      course_id: courseId,
-    });
-    return response.data;
-  }
-
-  async bulkEnroll(courseId: number, studentIds: number[]) {
-    const response = await lmsApiClient.post(`/courses/${courseId}/bulk-enroll`, {
-      student_ids: studentIds,
-    });
-    return response.data;
-  }
-
-  async cancelEnrollment(enrollmentId: number) {
-    const response = await lmsApiClient.delete(`/enrollments/${enrollmentId}`);
-    return response.data;
   }
 
   async triggerDocumentProcessing(contentId: number, courseId: number, nodeId?: number, fileUrl?: string) {

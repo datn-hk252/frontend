@@ -135,6 +135,30 @@ export async function updateUserStatus(id: number | string): Promise<User> {
   return mapServerUserToClient(raw);
 }
 
+/**
+ * Removes an account.
+ *
+ * The auth record goes for good, which is what stops the person signing in. The
+ * LMS keeps its copy of their name so the courses, quizzes and grades they left
+ * behind still say who made them, and drops them from every class roster.
+ *
+ * Locking an account (updateUserStatus) is the reversible way to retire someone
+ * and is what FR-ACC-03 asks for; this is for accounts created by mistake.
+ */
+export async function deleteUser(id: number | string): Promise<void> {
+  const res = await fetch(`/apiv1/api/users/${id}`, {
+    method: "DELETE",
+    credentials: "include",
+    headers: await authHeaders(),
+  });
+  if (!res.ok) {
+    const txt = await res.text().catch(() => "");
+    throw new Error(
+      `Delete user failed: ${res.status} ${res.statusText}${txt ? " - " + txt : ""}`
+    );
+  }
+}
+
 export async function updateUserRole(id: number | string, role: string): Promise<User> {
   const res = await fetch(`/apiv1/api/users/${id}/role`, {
     method: "PATCH",

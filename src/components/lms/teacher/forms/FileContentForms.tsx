@@ -24,6 +24,52 @@ function UploadSuccess({ fileName, fileSize }: { fileName: string; fileSize?: nu
   );
 }
 
+// ─── AudioContentForm ─────────────────────────────────────────────────────────
+
+/**
+ * AudioContentForm
+ *
+ * Listening material. Separate from DOCUMENT because a centre needs to know an
+ * mp3 is a listening exercise, not an attachment: the student view gives it a
+ * player, and a future Listening exam builder needs to find these.
+ */
+export function AudioContentForm({ formData, onChange, onFileUploaded }: ContentFormProps) {
+  const uploaded = !!formData.metadata?.file_path;
+
+  const handleFileUploaded = (fileInfo: FileInfo) => {
+    onFileUploaded(fileInfo);
+    onChange({
+      metadata: {
+        ...formData.metadata,
+        file_path: fileInfo.file_path,
+        file_name: fileInfo.file_name,
+        file_size: fileInfo.file_size,
+        file_id:   fileInfo.file_id,
+      },
+    });
+    if (!formData.title) onChange({ title: fileInfo.file_name });
+  };
+
+  return (
+    <div className="space-y-3">
+      <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+        Tải lên tệp âm thanh *
+      </label>
+      {uploaded ? (
+        <UploadSuccess
+          fileName={formData.metadata?.file_name ?? ""}
+          fileSize={formData.metadata?.file_size}
+        />
+      ) : (
+        <FileUpload fileType="audio" onFileUploaded={handleFileUploaded} />
+      )}
+      <p className="text-xs text-slate-500 dark:text-slate-400">
+        Định dạng: MP3, WAV, M4A, AAC, OGG, FLAC
+      </p>
+    </div>
+  );
+}
+
 // ─── DocumentContentForm ──────────────────────────────────────────────────────
 
 /**

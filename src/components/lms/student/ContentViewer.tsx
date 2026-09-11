@@ -5,6 +5,7 @@ import useSWR from "swr";
 import { ContentItem, CompletionBadge, EmptyState } from "./content-renderers/utils";
 import { TextRenderer } from "./content-renderers/TextRenderer";
 import { VideoRenderer } from "./content-renderers/VideoRenderer";
+import { AudioRenderer } from "./content-renderers/AudioRenderer";
 import { ImageRenderer } from "./content-renderers/ImageRenderer";
 import { DocumentRenderer } from "./content-renderers/DocumentRenderer";
 import { QuizRenderer } from "./content-renderers/QuizRenderer";
@@ -122,6 +123,9 @@ export default function ContentViewer({
         );
       case "VIDEO":
         return <VideoRenderer content={content} />;
+
+      case "AUDIO":
+        return <AudioRenderer content={content} />;
       case "IMAGE":
         return <ImageRenderer content={content} />;
       case "DOCUMENT":

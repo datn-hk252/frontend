@@ -2,13 +2,14 @@
 
 import { ReactNode } from "react";
 import {
-  Play, FileText, Image as ImageIcon,
+  Play, Headphones, FileText, Image as ImageIcon,
   HelpCircle, MessageSquare, Megaphone, File
 } from "lucide-react";
 import { Badge, BadgeVariant } from "./Badge";
 
 const CONTENT_META: Record<string, { icon: ReactNode; label: string; variant: BadgeVariant }> = {
   VIDEO:        { icon: <Play className="w-3.5 h-3.5" />,        label: "Video",      variant: "blue"   },
+  AUDIO:        { icon: <Headphones className="w-3.5 h-3.5" />,  label: "Âm thanh",   variant: "cyan"   },
   DOCUMENT:     { icon: <FileText className="w-3.5 h-3.5" />,    label: "Tài liệu",   variant: "gray"   },
   IMAGE:        { icon: <ImageIcon className="w-3.5 h-3.5" />,   label: "Hình ảnh",   variant: "purple" },
   TEXT:         { icon: <FileText className="w-3.5 h-3.5" />,    label: "Bài đọc",    variant: "gray"   },

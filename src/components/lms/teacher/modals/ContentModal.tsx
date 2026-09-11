@@ -16,6 +16,7 @@
  *
  *   TextContentForm              → markdown editor
  *   VideoContentForm             → YouTube / Server / URL
+ *   AudioContentForm             → listening material upload
  *   DocumentContentForm          → file upload
  *   ImageContentForm             → file upload + URL
  *   QuizContentForm              → QuizSettingsForm wrapper
@@ -34,7 +35,8 @@ import { toast } from "sonner";
 
 import { TextContentForm }              from "../forms/TextContentForm";
 import { VideoContentForm }             from "../forms/VideoContentForm";
-import { DocumentContentForm,
+import { AudioContentForm,
+         DocumentContentForm,
          ImageContentForm }             from "../forms/FileContentForms";
 import { QuizContentForm }              from "../forms/QuizContentForm";
 import { ForumAnnouncementContentForm } from "../forms/ForumAnnouncementContentForm";
@@ -46,6 +48,7 @@ import type { ContentFormState } from "@/types";
 const CONTENT_TYPES: { value: ContentType; label: string }[] = [
   { value: "TEXT",         label: "Văn bản"  },
   { value: "VIDEO",        label: "Video"    },
+  { value: "AUDIO",        label: "Âm thanh" },
   { value: "DOCUMENT",     label: "Tài liệu" },
   { value: "IMAGE",        label: "Hình ảnh" },
   { value: "QUIZ",         label: "Quiz"     },
@@ -142,6 +145,9 @@ export default function ContentModal({
     if (formData.type === "VIDEO" && !formData.metadata?.file_path && !formData.metadata?.video_url) {
       return "Vui lòng upload video hoặc nhập URL video.";
     }
+    if (formData.type === "AUDIO" && !formData.metadata?.file_path) {
+      return "Vui lòng tải lên tệp âm thanh";
+    }
     if (formData.type === "DOCUMENT" && !formData.metadata?.file_path) {
       return "Vui lòng upload tài liệu.";
     }
@@ -206,6 +212,7 @@ export default function ContentModal({
     switch (formData.type) {
       case "TEXT":         return <TextContentForm {...sharedProps} />;
       case "VIDEO":        return <VideoContentForm {...sharedProps} />;
+      case "AUDIO":        return <AudioContentForm {...sharedProps} />;
       case "DOCUMENT":     return <DocumentContentForm {...sharedProps} />;
       case "IMAGE":        return <ImageContentForm {...sharedProps} />;
       case "QUIZ":         return (

@@ -80,7 +80,6 @@ export default function StudentDashboard() {
             }
             router.push(`/lms/student/courses/${courseId}`);
           }}
-          onNavigateToDiscover={() => router.push("/lms/student/discover")}
         />
       </div>
 
@@ -130,7 +129,6 @@ export default function StudentDashboard() {
               setCourseStatusFilter={setCourseStatusFilter}
               courseSortOrder={courseSortOrder}
               setCourseSortOrder={setCourseSortOrder}
-              onNavigateToDiscover={() => router.push("/lms/student/discover")}
               onNavigateToCourse={(courseId) => router.push(`/lms/student/courses/${courseId}`)}
             />
           </div>
