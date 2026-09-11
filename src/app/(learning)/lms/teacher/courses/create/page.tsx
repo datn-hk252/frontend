@@ -143,8 +143,7 @@ export default function CreateCoursePage() {
         category: formData.category || undefined,
         level: formData.level || undefined,
         thumbnail_url: formData.thumbnail_url ? formData.thumbnail_url : undefined,
-        // Every course is public: ORG_ONLY resolves through organization
-        // membership, and nothing populates that any more.
+        // The only value the column accepts.
         visibility: "PUBLIC",
       });
       
