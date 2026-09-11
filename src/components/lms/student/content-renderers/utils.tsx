@@ -3,7 +3,7 @@ import { Download } from "lucide-react";
 
 export interface ContentItem {
   id: number;
-  type: "TEXT" | "VIDEO" | "IMAGE" | "DOCUMENT" | "QUIZ" | "FORUM" | "ANNOUNCEMENT" | string;
+  type: "TEXT" | "VIDEO" | "AUDIO" | "IMAGE" | "DOCUMENT" | "QUIZ" | "FORUM" | "ANNOUNCEMENT" | string;
   title: string;
   description?: string;
   metadata?: Record<string, any>;

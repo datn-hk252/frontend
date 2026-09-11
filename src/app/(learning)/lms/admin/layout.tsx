@@ -44,6 +44,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const navItems = [
     { href: "/lms/admin", label: "Dashboard" },
+    { href: "/lms/admin/classes", label: "Quản lý lớp" },
     { href: "/lms/admin/youtube-manage", label: "Quản lý video" },
   ];
 

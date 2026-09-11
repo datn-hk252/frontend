@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Target, ChevronRight, Search, TrendingUp } from "lucide-react";
+import { Target, ChevronRight, TrendingUp } from "lucide-react";
 import { PrimaryBtn } from "../shared/Button";
 import {
   Tooltip as UITooltip,
@@ -21,7 +21,6 @@ interface CourseProgressAndGoalCardProps {
   focusCourse: FocusCourse | null;
   focusRecommendation?: RecommendationItem | null;
   onNavigateToCourse?: (courseId: number) => void;
-  onNavigateToDiscover?: () => void;
   totalCount: number;
   completedCount: number;
   inProgressCount: number;
@@ -36,7 +35,6 @@ export function CourseProgressAndGoalCard({
   focusCourse,
   focusRecommendation,
   onNavigateToCourse,
-  onNavigateToDiscover,
   totalCount,
   completedCount,
   inProgressCount,
@@ -251,13 +249,11 @@ export function CourseProgressAndGoalCard({
             {focusCourse.progress_percent === 0 ? "Bắt đầu học" : "Học tiếp"}
           </PrimaryBtn>
         ) : (
-          <PrimaryBtn
-            onClick={onNavigateToDiscover}
-            className="w-full text-xs py-2 bg-none bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl active:scale-[0.97] flex items-center justify-center gap-1.5 dark:bg-none dark:bg-blue-600 dark:hover:bg-blue-700 dark:text-white"
-            icon={<Search className="w-3.5 h-3.5" />}
-          >
-            {totalCount > 0 ? "Tìm khóa học mới" : "Khám phá khóa học"}
-          </PrimaryBtn>
+          <p className="w-full text-center text-[11px] text-slate-500 dark:text-slate-400">
+            {totalCount > 0
+              ? "Đã học xong các lớp hiện tại."
+              : "Trung tâm sẽ xếp bạn vào lớp."}
+          </p>
         )}
       </div>
 

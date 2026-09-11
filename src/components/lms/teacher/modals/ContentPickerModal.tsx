@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 interface Content {
   id: number;
-  type: "TEXT" | "VIDEO" | "DOCUMENT" | "IMAGE" | "QUIZ" | "FORUM" | "ANNOUNCEMENT";
+  type: "TEXT" | "VIDEO" | "AUDIO" | "DOCUMENT" | "IMAGE" | "QUIZ" | "FORUM" | "ANNOUNCEMENT";
   title: string;
   description?: string;
   metadata?: Record<string, any>;

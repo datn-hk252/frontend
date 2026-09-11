@@ -3,8 +3,9 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { User } from "@/types";
 import { UserAvatar } from "../UserAvatar";
-import { X, Pencil, Save, Loader2, Mail, Hash, Shield, Calendar, Activity } from "lucide-react";
-import { updateUser, updateUserRole } from "@/lib/users/api";
+import { X, Pencil, Save, Loader2, Mail, Hash, Shield, Calendar, Activity, Trash2 } from "lucide-react";
+import { updateUser, updateUserRole, deleteUser } from "@/lib/users/api";
+import { useAuth } from "@/hooks/auth/useAuth";
 import { fetchRoles, Role } from "@/lib/admin/rolesApi";
 import LmsUserRoleManager from "@/components/lms/admin/LmsUserRoleManager";
 
@@ -40,6 +41,36 @@ function roleBadgeColor(role: string): string {
 
 
 export default function DetailModal({ user, onClose, isAdmin = false, onUserUpdated }: DetailModalProps) {
+  const { user: me } = useAuth();
+  const [deleting, setDeleting] = useState(false);
+
+  // Deleting the account you are signed in with locks you out of the screen you
+  // are standing on, so the control simply is not offered for yourself.
+  const isSelf = !!me && !!user && String(me.id) === String(user.id);
+
+  const handleDelete = async () => {
+    if (!user) return;
+    if (
+      !confirm(
+        `Xóa tài khoản ${user.name}?` +
+          "\n\nNgười này sẽ không đăng nhập được nữa và bị gỡ khỏi mọi lớp đang học. " +
+          "Tên vẫn còn trên học liệu và bài chấm họ từng làm." +
+          "\n\nMuốn tạm dừng thôi thì hãy khóa tài khoản thay vì xóa."
+      )
+    ) {
+      return;
+    }
+    setDeleting(true);
+    try {
+      await deleteUser(user.id);
+      onUserUpdated?.();
+      onClose();
+    } catch {
+      alert("Không xóa được tài khoản này.");
+    } finally {
+      setDeleting(false);
+    }
+  };
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -399,13 +430,29 @@ export default function DetailModal({ user, onClose, isAdmin = false, onUserUpda
               </button>
             </>
           ) : (
-            <button
-              onClick={onClose}
-              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold 
-                         transition-colors duration-200 active:scale-95"
-            >
-              Đóng
-            </button>
+            <>
+              {isAdmin && !isSelf && (
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="mr-auto px-4 py-2 rounded-xl border border-red-200 dark:border-red-900/60
+                             text-red-600 dark:text-red-400 bg-white dark:bg-slate-900
+                             hover:bg-red-50 dark:hover:bg-red-950/30 font-medium
+                             transition-all duration-200 active:scale-95 disabled:opacity-50
+                             flex items-center gap-2"
+                >
+                  {deleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                  {deleting ? "Đang xóa..." : "Xóa tài khoản"}
+                </button>
+              )}
+              <button
+                onClick={onClose}
+                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold
+                           transition-colors duration-200 active:scale-95"
+              >
+                Đóng
+              </button>
+            </>
           )}
         </div>
       </div>

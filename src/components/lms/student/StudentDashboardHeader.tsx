@@ -25,7 +25,6 @@ interface StudentDashboardHeaderProps {
   loadingEnrolled: boolean;
   loadAllData: () => void;
   onNavigateToCourse: (courseId: number) => void;
-  onNavigateToDiscover: () => void;
 }
 
 export function StudentDashboardHeader({
@@ -41,7 +40,6 @@ export function StudentDashboardHeader({
   loadingEnrolled,
   loadAllData,
   onNavigateToCourse,
-  onNavigateToDiscover,
 }: StudentDashboardHeaderProps) {
   return (
     <div className="relative w-full overflow-hidden border-b border-slate-200/80 dark:border-blue-500/15 bg-white/20 dark:bg-[#070E1C]/20 backdrop-blur-xs py-4 md:py-5">
@@ -80,7 +78,6 @@ export function StudentDashboardHeader({
             notStartedPercent={notStartedPercent}
             loading={loadingEnrolled}
             onNavigateToCourse={onNavigateToCourse}
-            onNavigateToDiscover={onNavigateToDiscover}
           />
         </div>
       </div>

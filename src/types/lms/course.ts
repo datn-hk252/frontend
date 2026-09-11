@@ -1,6 +1,6 @@
 export type CourseLevel = "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
 export type CourseStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
-export type ContentType = "TEXT" | "VIDEO" | "DOCUMENT" | "IMAGE" | "QUIZ" | "FORUM" | "ANNOUNCEMENT";
+export type ContentType = "TEXT" | "VIDEO" | "AUDIO" | "DOCUMENT" | "IMAGE" | "QUIZ" | "FORUM" | "ANNOUNCEMENT";
 export type TabType = "discover" | "my-courses" | "pending";
 
 export interface Course {

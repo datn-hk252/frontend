@@ -8,7 +8,7 @@ import { FileType as FileTypeIcon, HardDrive, AlertCircle } from "lucide-react";
 
 interface FileUploadProps {
   onFileUploaded: (fileInfo: FileInfo) => void;
-  fileType: "video" | "document" | "image";
+  fileType: "video" | "audio" | "document" | "image";
   accept?: string;
   maxSize?: number; // in MB
   disabled?: boolean;
@@ -32,6 +32,8 @@ export default function FileUpload({
     switch (fileType) {
       case "video":
         return ".mp4,.avi,.mov,.mkv,.webm,.flv,.wmv,.m4v";
+      case "audio":
+        return ".mp3,.wav,.m4a,.aac,.ogg,.oga,.flac,.wma";
       case "document":
         return ".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.csv,.zip,.rar,.7z,.tar,.gz,.ipynb,.py,.cpp,.sh,.json,.sql";
       case "image":
