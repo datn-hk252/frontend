@@ -157,17 +157,6 @@ export const AllScenarios: StoryObj<typeof StudentCourseAnalytics> = {
           />
         </section>
 
-        {/* Scenario 5: Populated state - Flashcard tab */}
-        <section className="space-y-4">
-          <h2 className="text-lg font-bold border-b pb-2 text-slate-700 dark:text-slate-350">
-            {'5. Kịch bản: Tab "Ghi nhớ (Flashcard)"'}
-          </h2>
-          <StudentCourseAnalytics
-            {...baseProps}
-            analyticsTab="flashcards"
-            setAnalyticsTab={() => {}}
-          />
-        </section>
       </div>
     );
   }

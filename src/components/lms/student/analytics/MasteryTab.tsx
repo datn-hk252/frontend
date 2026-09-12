@@ -1,6 +1,6 @@
 "use client";
 
-import { Award, CheckSquare, TrendingUp } from "lucide-react";
+import { Award } from "lucide-react";
 
 import {
   ResponsiveContainer,
@@ -13,87 +13,17 @@ import {
 
 interface MasteryTabProps {
   quizScores: any[];
-  microInteractions: any;
-  spacedRepQuizzes: any;
   mounted: boolean;
 }
 
 export function MasteryTab({
   quizScores,
-  microInteractions,
-  spacedRepQuizzes,
   mounted,
 }: MasteryTabProps) {
-  const showStatsRow = (microInteractions && microInteractions.total_interactions > 0) || (spacedRepQuizzes && spacedRepQuizzes.total_tracked > 0);
 
   return (
     <div className="space-y-6" role="tabpanel">
       {/* Hàng 2: Concept check & SM-2 Quiz (Split Metrics Row) */}
-      {showStatsRow && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white dark:bg-[#0F1E35] border border-slate-200 dark:border-blue-500/12 rounded-2xl p-5 shadow-sm dark:shadow-none hover:shadow-md dark:hover:border-blue-500/25 transition-all duration-300">
-          {microInteractions && microInteractions.total_interactions > 0 && (
-            <div className="flex flex-col justify-center gap-3">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-emerald-50 dark:bg-emerald-955/40 rounded-xl">
-                  <CheckSquare className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm">
-                    Concept check (Tương tác nhanh)
-                  </h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Đánh giá nhanh cuối bài</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-4 text-center mt-2">
-                <div className="py-2 px-1">
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Số câu</p>
-                  <p className="text-base font-extrabold text-slate-800 dark:text-slate-100 mt-0.5">{microInteractions.total_interactions}</p>
-                </div>
-                <div className="py-2 px-1 border-x border-slate-200/50 dark:border-blue-500/10">
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Đúng</p>
-                  <p className="text-base font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5">{microInteractions.total_correct}</p>
-                </div>
-                <div className="py-2 px-1">
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Tỷ lệ</p>
-                  <p className="text-base font-extrabold text-blue-600 dark:text-cyan-400 mt-0.5">
-                    {Math.round((microInteractions.total_correct / microInteractions.total_interactions) * 100)}%
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {spacedRepQuizzes && spacedRepQuizzes.total_tracked > 0 && (
-            <div className="flex flex-col justify-center gap-3 border-t md:border-t-0 md:border-l border-slate-200/60 dark:border-blue-500/10 pt-4 md:pt-0 md:pl-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-violet-50 dark:bg-violet-955/40 rounded-xl">
-                  <TrendingUp className="w-4 h-4 text-violet-650 dark:text-violet-400" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm">
-                    Luyện tập ngắt quãng (SM-2 Quiz)
-                  </h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Học tập thông minh</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-4 text-center mt-2">
-                <div className="py-2 px-1">
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Theo dõi</p>
-                  <p className="text-base font-extrabold text-slate-800 dark:text-slate-205 mt-0.5">{spacedRepQuizzes.total_tracked}</p>
-                </div>
-                <div className="py-2 px-1 border-x border-slate-200/50 dark:border-blue-500/10">
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Nhớ tốt</p>
-                  <p className="text-base font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5">{spacedRepQuizzes.mastered}</p>
-                </div>
-                <div className="py-2 px-1">
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Điểm TB</p>
-                  <p className="text-base font-extrabold text-violet-655 dark:text-violet-400 mt-0.5">{spacedRepQuizzes.avg_quality.toFixed(1)}</p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Hàng 3: Quiz results (Split Panel) */}
       <div className="bg-white dark:bg-[#0F1E35] border border-slate-200 dark:border-blue-500/12 rounded-2xl p-5 shadow-sm dark:shadow-none hover:shadow-md dark:hover:border-blue-500/25 transition-all duration-300">

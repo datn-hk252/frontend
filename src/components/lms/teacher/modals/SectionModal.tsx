@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { FolderPlus, FolderEdit, Loader2, Tag, AlignLeft, Hash, AlertCircle } from "lucide-react";
+import { FolderPlus, FolderEdit, Loader2, Tag, AlignLeft, Hash, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import BaseModal from "@/components/lms/shared/BaseModal";
 import lmsService from "@/services/lms/lmsService";
@@ -27,6 +27,11 @@ export function SectionModal({
     description: section?.description || "",
     order_index: section?.order_index ?? existingSections.length + 1,
   });
+  // A chapter is written before it is shown, so it starts hidden and the
+  // teacher decides when it goes live. Creation has no say in it - the API
+  // takes this only on update - which is why the control appears when editing
+  // and a note explains the default when creating.
+  const [isPublished, setIsPublished] = useState(section?.is_published ?? false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,8 +48,8 @@ export function SectionModal({
       let savedSection: Section;
 
       if (section) {
-        await lmsService.updateSection(section.id, formData);
-        savedSection = { ...section, ...formData };
+        await lmsService.updateSection(section.id, { ...formData, is_published: isPublished });
+        savedSection = { ...section, ...formData, is_published: isPublished };
       } else {
         const response = await lmsService.createSection(courseId, formData);
         savedSection = response.data as Section;
@@ -182,6 +187,49 @@ export function SectionModal({
             </span>
           </div>
         </div>
+
+        {/* Hiển thị với học viên */}
+        {isEditing ? (
+          <div className="space-y-1.5">
+            <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+              {isPublished ? (
+                <Eye className="w-3.5 h-3.5 text-green-600 dark:text-green-400" />
+              ) : (
+                <EyeOff className="w-3.5 h-3.5 text-slate-400" />
+              )}
+              <span>Hiển thị với học viên</span>
+            </label>
+            <button
+              type="button"
+              onClick={() => setIsPublished(!isPublished)}
+              className={`w-full text-left px-4 py-3 rounded-xl border transition-all ${
+                isPublished
+                  ? "border-green-300 dark:border-green-800 bg-green-50 dark:bg-green-950/30"
+                  : "border-slate-300 dark:border-blue-500/20 bg-slate-50 dark:bg-[#0D192E]"
+              }`}
+            >
+              <span className="flex items-center gap-3">
+                <span
+                  className={`w-9 h-5 rounded-full flex items-center px-0.5 shrink-0 transition-colors ${
+                    isPublished ? "bg-green-500 justify-end" : "bg-slate-400 dark:bg-slate-600 justify-start"
+                  }`}
+                >
+                  <span className="w-4 h-4 rounded-full bg-white block" />
+                </span>
+                <span className="text-sm text-slate-700 dark:text-slate-300">
+                  {isPublished
+                    ? "Học viên trong lớp thấy chương này và các bài học bên trong."
+                    : "Chương đang ẩn. Học viên không thấy, kể cả bài học đã xuất bản bên trong."}
+                </span>
+              </span>
+            </button>
+          </div>
+        ) : (
+          <p className="text-xs text-slate-500 dark:text-slate-400 border-l-2 border-slate-300 dark:border-slate-700 pl-3">
+            Chương mới tạo sẽ <strong>ẩn với học viên</strong>. Soạn xong nội dung thì mở lại
+            chương này và bật &quot;Hiển thị với học viên&quot;.
+          </p>
+        )}
       </form>
     </BaseModal>
   );

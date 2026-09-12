@@ -48,6 +48,7 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
   const navItems = [
     { href: "/lms/teacher", label: "Dashboard" },
     { href: "/lms/teacher/courses", label: "Khóa học" },
+    { href: "/lms/teacher/classes", label: "Lớp của tôi" },
     { href: "/lms/teacher/ai-assistant", label: "AI Assistant" },
   ];
 

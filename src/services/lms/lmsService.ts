@@ -55,8 +55,7 @@ class LMSService {
     category?: string;
     level?: string;
     thumbnail_url?: string;
-    org_id?: number;
-    visibility?: "PUBLIC" | "ORG_ONLY";
+    visibility?: "PUBLIC";
   }) {
     const response = await lmsApiClient.post("/courses", courseData);
     return response.data;
@@ -75,8 +74,7 @@ class LMSService {
       category?: string;
       level?: string;
       thumbnail_url?: string;
-      org_id?: number;
-      visibility?: "PUBLIC" | "ORG_ONLY";
+      visibility?: "PUBLIC";
     }
   ) {
     const response = await lmsApiClient.put(`/courses/${courseId}`, updates);

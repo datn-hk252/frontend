@@ -83,6 +83,17 @@ export default function CreateUserModal({ open, onClose, onUserCreated }: Create
         throw new Error("Không thể tạo người dùng mới.");
       }
 
+      // The account exists either way; only the password delivery can fail, and
+      // the password is not recoverable, so say so instead of closing on success.
+      if ((res.emailFailures ?? []).length > 0 || res.emailPending) {
+        setError(
+          "Tài khoản đã tạo nhưng chưa gửi được mật khẩu. Mở hồ sơ người này và bấm " +
+            "\"Gửi lại mật khẩu\"."
+        );
+        onUserCreated();
+        return;
+      }
+
       setSuccess(true);
       onUserCreated();
       setTimeout(() => {

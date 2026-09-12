@@ -22,8 +22,8 @@ export interface Course {
   teacher_email?: string;
   teacher_avatar_url?: string;
   enrollment_count?: number;
-  org_id?: number;
-  visibility?: "PUBLIC" | "ORG_ONLY";
+  /** Only one value left; organisations went with the club-era code. */
+  visibility?: "PUBLIC";
   created_by?: number;
 }
 

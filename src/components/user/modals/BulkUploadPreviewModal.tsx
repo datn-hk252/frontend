@@ -36,6 +36,8 @@ export default function BulkUploadPreviewModal({ open, onClose, parsedUsers, onI
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [mailFailures, setMailFailures] = useState<string[]>([]);
+  const [mailPending, setMailPending] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -186,11 +188,19 @@ export default function BulkUploadPreviewModal({ open, onClose, parsedUsers, onI
         throw new Error("Không thể import người dùng.");
       }
 
+      const failures: string[] = res.emailFailures ?? [];
+      setMailFailures(failures);
+      setMailPending(Boolean(res.emailPending));
       setSuccess(true);
       onImportSuccess();
-      setTimeout(() => {
-        onClose();
-      }, 1500);
+
+      // Closing on a timer would take the list of failed addresses with it, and
+      // that list is the only record of which accounts still need a password.
+      if (failures.length === 0 && !res.emailPending) {
+        setTimeout(() => {
+          onClose();
+        }, 1500);
+      }
     } catch (err: any) {
       console.error(err);
       setError(err?.message ?? "Import thất bại. Vui lòng kiểm tra lại dữ liệu.");
@@ -246,10 +256,37 @@ export default function BulkUploadPreviewModal({ open, onClose, parsedUsers, onI
               </div>
             </div>
           )}
-          {success && (
+          {success && mailFailures.length === 0 && !mailPending && (
             <div className="p-4 mb-4 bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 rounded-2xl flex gap-3 items-center">
               <Check className="w-5 h-5 text-green-500" />
               <p className="text-sm font-semibold text-green-800 dark:text-green-300">Import thành công! Đang đồng bộ...</p>
+            </div>
+          )}
+          {success && mailPending && mailFailures.length === 0 && (
+            <div className="p-4 mb-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-2xl">
+              <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+                Tài khoản đã tạo, thư vẫn đang gửi
+              </p>
+              <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+                Hệ thống chưa xác nhận được thư nào đã đến. Kiểm tra lại sau ít phút; ai
+                không nhận được thì mở hồ sơ và bấm &quot;Gửi lại mật khẩu&quot;.
+              </p>
+            </div>
+          )}
+          {success && mailFailures.length > 0 && (
+            <div className="p-4 mb-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-2xl">
+              <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+                Tài khoản đã tạo, nhưng {mailFailures.length} thư không gửi được
+              </p>
+              <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+                Mật khẩu chỉ nằm trong thư đó và không tra lại được. Những người dưới đây
+                chưa đăng nhập được — mở hồ sơ từng người và bấm &quot;Gửi lại mật khẩu&quot;.
+              </p>
+              <ul className="mt-2 max-h-32 overflow-y-auto text-xs text-amber-900 dark:text-amber-200 font-mono space-y-0.5">
+                {mailFailures.map((address) => (
+                  <li key={address}>{address}</li>
+                ))}
+              </ul>
             </div>
           )}
 
