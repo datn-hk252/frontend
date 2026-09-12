@@ -34,11 +34,8 @@ export default function StudentDashboard() {
     selectedCourseId,
     setSelectedCourseId,
     loadingAnalytics,
-    flashcardStats,
     quizScores,
     lessonProgress,
-    microInteractions,
-    spacedRepQuizzes,
     analyticsTab,
     setAnalyticsTab,
     loadAllData,
@@ -105,11 +102,8 @@ export default function StudentDashboard() {
               loadingAnalytics={loadingAnalytics}
               analyticsTab={analyticsTab}
               setAnalyticsTab={setAnalyticsTab}
-              flashcardStats={flashcardStats}
               quizScores={quizScores}
               lessonProgress={lessonProgress}
-              microInteractions={microInteractions}
-              spacedRepQuizzes={spacedRepQuizzes}
               mounted={mounted}
             />
           </div>

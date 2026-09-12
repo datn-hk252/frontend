@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { lmsService } from "@/services/lms/lmsService";
 import { analyticsService } from "@/services/lms/analyticsService";
+import progressService, { type ProgressDetailItem } from "@/services/lms/progressService";
 import { Enrollment } from "@/types";
 import {
   getRecommendations,
@@ -11,6 +12,46 @@ import {
   type LearningPreferenceProfile,
   type RecommendationItem,
 } from "@/services/lms/recommendationService";
+
+/**
+ * Rolls a flat list of lessons up into the per-type and per-section totals the
+ * progress panel draws.
+ *
+ * The parked endpoint did this in SQL. Doing it here instead keeps the fix on
+ * one side of the wire, and the lists involved are one course's worth of
+ * lessons - small enough that where the grouping happens does not matter.
+ */
+function summariseProgress(items: ProgressDetailItem[]) {
+  const roll = (key: keyof ProgressDetailItem) => {
+    const buckets = new Map<string, { total: number; completed: number }>();
+    for (const item of items) {
+      const name = String(item[key] ?? "");
+      const bucket = buckets.get(name) ?? { total: 0, completed: 0 };
+      bucket.total += 1;
+      if (item.is_completed) bucket.completed += 1;
+      buckets.set(name, bucket);
+    }
+    return buckets;
+  };
+
+  const byType = roll("content_type");
+  const bySection = roll("section_title");
+
+  return {
+    total_content: items.length,
+    by_type: [...byType].map(([content_type, v]) => ({
+      content_type,
+      total: v.total,
+      completed: v.completed,
+    })),
+    by_section: [...bySection].map(([section_title, v]) => ({
+      section_title,
+      total: v.total,
+      completed: v.completed,
+      percent: v.total === 0 ? 0 : Math.round((v.completed / v.total) * 100),
+    })),
+  };
+}
 
 export function useStudentDashboard() {
   const [mounted, setMounted] = useState(false);
@@ -28,12 +69,9 @@ export function useStudentDashboard() {
   // Selected Course details for Analytics
   const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
   const [loadingAnalytics, setLoadingAnalytics] = useState(false);
-  const [flashcardStats, setFlashcardStats] = useState<any>(null);
   const [quizScores, setQuizScores] = useState<any[]>([]);
   const [lessonProgress, setLessonProgress] = useState<any>(null);
-  const [microInteractions, setMicroInteractions] = useState<any>(null);
-  const [spacedRepQuizzes, setSpacedRepQuizzes] = useState<any>(null);
-  const [analyticsTab, setAnalyticsTab] = useState<"lessons" | "mastery" | "flashcards">("lessons");
+  const [analyticsTab, setAnalyticsTab] = useState<"lessons" | "mastery">("lessons");
 
   useEffect(() => {
     setMounted(true);
@@ -52,7 +90,13 @@ export function useStudentDashboard() {
           profile_available: false,
         })),
       ]);
-      const enrollList = accepted || [];
+      // A course still in draft is material the centre is writing, not material
+      // anyone was given. The enrolment row exists because the learner was put
+      // in a class, but opening such a course answers 403 - so listing it shows
+      // a card that cannot be clicked and explains nothing.
+      const enrollList = (accepted || []).filter(
+        (enrollment: Enrollment) => enrollment.course_status !== "DRAFT",
+      );
       setAcceptedEnrollments(enrollList);
 
       const availableEnrollments = enrollList.filter(
@@ -127,18 +171,25 @@ export function useStudentDashboard() {
   const loadCourseAnalytics = useCallback(async (courseId: number) => {
     setLoadingAnalytics(true);
     try {
-      const result = await analyticsService.getStudentAnalyticsSummary(courseId);
-      const summary = result?.data;
+      // Was one call to /analytics/student-summary, which has not existed since
+      // that handler was parked. The error was swallowed and the panel drew its
+      // empty state, so for six days the screen said "no lessons in this course"
+      // about courses that had them. These two endpoints are live and carry
+      // between them everything the panel reads.
+      const [items, scores] = await Promise.all([
+        progressService.getMyCourseProgressDetail(courseId),
+        analyticsService
+          .getMyQuizScores(courseId)
+          .then((r) => r.data)
+          .catch(() => []),
+      ]);
 
-      if (summary) {
-        setFlashcardStats(summary.flashcards);
-        setQuizScores(summary.quiz_scores || []);
-        setLessonProgress(summary.lesson_progress);
-        setMicroInteractions(summary.micro_interactions);
-        setSpacedRepQuizzes(summary.spaced_rep_quizzes);
-      }
+      setLessonProgress(summariseProgress(items));
+      setQuizScores(scores || []);
     } catch (e) {
       console.error("Error loading course analytics:", e);
+      setLessonProgress(null);
+      setQuizScores([]);
     } finally {
       setLoadingAnalytics(false);
     }
@@ -247,11 +298,8 @@ export function useStudentDashboard() {
     selectedCourseId,
     setSelectedCourseId,
     loadingAnalytics,
-    flashcardStats,
     quizScores,
     lessonProgress,
-    microInteractions,
-    spacedRepQuizzes,
     analyticsTab,
     setAnalyticsTab,
     loadAllData,
