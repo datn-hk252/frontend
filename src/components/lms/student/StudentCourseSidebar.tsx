@@ -11,12 +11,10 @@ import {
   Select,
 } from "@/components/lms/shared";
 import { Enrollment } from "@/types";
-import type { RecommendationItem } from "@/services/lms/recommendationService";
 
 interface StudentCourseSidebarProps {
   acceptedEnrollments: Enrollment[];
   filteredAndSortedEnrollments: Enrollment[];
-  courseRecommendations: RecommendationItem[];
   loadingEnrolled: boolean;
   selectedCourseId: number | null;
   setSelectedCourseId: (id: number) => void;
@@ -24,15 +22,14 @@ interface StudentCourseSidebarProps {
   setCourseSearchQuery: (query: string) => void;
   courseStatusFilter: "ALL" | "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
   setCourseStatusFilter: (filter: "ALL" | "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED") => void;
-  courseSortOrder: "recommended" | "desc" | "asc";
-  setCourseSortOrder: (order: "recommended" | "desc" | "asc") => void;
+  courseSortOrder: "desc" | "asc";
+  setCourseSortOrder: (order: "desc" | "asc") => void;
   onNavigateToCourse: (courseId: number) => void;
 }
 
 export function StudentCourseSidebar({
   acceptedEnrollments,
   filteredAndSortedEnrollments,
-  courseRecommendations,
   loadingEnrolled,
   selectedCourseId,
   setSelectedCourseId,
@@ -92,7 +89,6 @@ export function StudentCourseSidebar({
               value={courseSortOrder}
               onValueChange={(val: any) => setCourseSortOrder(val)}
               options={[
-                { value: "recommended", label: "Phù hợp nhất" },
                 { value: "desc", label: "Mới nhất" },
                 { value: "asc", label: "Cũ nhất" },
               ]}
@@ -119,7 +115,6 @@ export function StudentCourseSidebar({
           {filteredAndSortedEnrollments.map((en) => {
             const isSelected = en.course_id === selectedCourseId;
             const isArchived = en.course_status === "ARCHIVED";
-            const recommendation = courseRecommendations.find(item => item.entity.course_id === en.course_id);
             return (
               <ProgressCard
                 key={en.id}
@@ -130,10 +125,9 @@ export function StudentCourseSidebar({
                 progress={en.progress_percent || 0}
                 isSelected={isSelected}
                 enrolledAt={en.accepted_at || en.enrolled_at}
-                recommendationBadge={recommendation?.badges[0]?.text}
                 isUnavailable={isArchived}
-                unavailableMessage={isArchived ? "Khóa học tạm thời bị vô hiệu hóa để xem xét lại nội dung vi phạm." : undefined}
-                onUnavailableClick={isArchived ? () => toast.error("Khóa học tạm thời đóng để kiểm duyệt lại nội dung/bản quyền.", { duration: 5000 }) : undefined}
+                unavailableMessage={isArchived ? "Khóa học đã được trung tâm lưu trữ nên tạm thời không mở." : undefined}
+                onUnavailableClick={isArchived ? () => toast.error("Khóa học đã được trung tâm lưu trữ. Liên hệ trung tâm nếu bạn cần xem lại học liệu.", { duration: 5000 }) : undefined}
                 onClick={() => !isArchived && setSelectedCourseId(en.course_id)}
                 onOpenDetails={() => !isArchived && onNavigateToCourse(en.course_id)}
               />

@@ -5,13 +5,6 @@ import { lmsService } from "@/services/lms/lmsService";
 import { analyticsService } from "@/services/lms/analyticsService";
 import progressService, { type ProgressDetailItem } from "@/services/lms/progressService";
 import { Enrollment } from "@/types";
-import {
-  getRecommendations,
-  getLearningPreferenceProfile,
-  trackRecommendationEvent,
-  type LearningPreferenceProfile,
-  type RecommendationItem,
-} from "@/services/lms/recommendationService";
 
 /**
  * Rolls a flat list of lessons up into the per-type and per-section totals the
@@ -62,9 +55,9 @@ export function useStudentDashboard() {
   // Filter & Search states
   const [courseSearchQuery, setCourseSearchQuery] = useState("");
   const [courseStatusFilter, setCourseStatusFilter] = useState<"ALL" | "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED">("ALL");
-  const [courseSortOrder, setCourseSortOrder] = useState<"recommended" | "desc" | "asc">("recommended");
-  const [courseRecommendations, setCourseRecommendations] = useState<RecommendationItem[]>([]);
-  const [courseRecommendationSetId, setCourseRecommendationSetId] = useState<string | null>(null);
+  // "recommended" went with the ranking service. Newest first is the honest
+  // replacement: it is the one order this data can actually justify.
+  const [courseSortOrder, setCourseSortOrder] = useState<"desc" | "asc">("desc");
 
   // Selected Course details for Analytics
   const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
@@ -83,13 +76,7 @@ export function useStudentDashboard() {
     setLoadingEnrolled(true);
     setError("");
     try {
-      const [accepted, profile] = await Promise.all([
-        lmsService.getMyEnrollments("ACCEPTED"),
-        getLearningPreferenceProfile().catch((): LearningPreferenceProfile => ({
-          interested_categories: [],
-          profile_available: false,
-        })),
-      ]);
+      const accepted = await lmsService.getMyEnrollments("ACCEPTED");
       // A course still in draft is material the centre is writing, not material
       // anyone was given. The enrolment row exists because the learner was put
       // in a class, but opening such a course answers 403 - so listing it shows
@@ -104,46 +91,8 @@ export function useStudentDashboard() {
       );
 
       if (availableEnrollments.length === 0) {
-        setCourseRecommendations([]);
-        setCourseRecommendationSetId(null);
         setSelectedCourseId(null);
         return;
-      }
-
-      try {
-        const recommendationSet = await getRecommendations({
-          surface: "dashboard",
-          limit: Math.min(50, Math.max(1, availableEnrollments.length)),
-          goal: profile.target_career || undefined,
-          interestedCategories: profile.interested_categories,
-          experienceLevel: profile.experience_level || undefined,
-          profileResolved: true,
-          candidates: availableEnrollments.map((enrollment: Enrollment) => ({
-            entity_id: enrollment.course_id,
-            title: enrollment.course_title ?? `Khóa học #${enrollment.course_id}`,
-            description: enrollment.course_description,
-            category: enrollment.course_category,
-            level: enrollment.course_level,
-            enrolled: true,
-            progress_percent: enrollment.progress_percent ?? 0,
-            published_at: enrollment.course_published_at,
-            updated_at: enrollment.course_updated_at,
-            last_activity_at: enrollment.last_activity_at,
-            new_content_count: enrollment.new_content_count ?? 0,
-            href: `/lms/student/courses/${enrollment.course_id}/learn`,
-          })),
-        });
-        setCourseRecommendations(recommendationSet.items);
-        setCourseRecommendationSetId(recommendationSet.recommendation_set_id);
-        const topItem = recommendationSet.items[0];
-        if (topItem) {
-          trackRecommendationEvent(topItem, recommendationSet.recommendation_set_id, "impression", "dashboard");
-        }
-      } catch (recommendationError) {
-        // Enrollment rendering remains available when the ranking service is down.
-        console.warn("Recommendation ranking unavailable, using enrollment order", recommendationError);
-        setCourseRecommendations([]);
-        setCourseRecommendationSetId(null);
       }
 
       // Select first course by default for analytics
@@ -236,18 +185,11 @@ export function useStudentDashboard() {
         return true;
       })
       .sort((a, b) => {
-        if (courseSortOrder === "recommended") {
-          const rankByCourse = new Map(
-            courseRecommendations.map((item) => [item.entity.course_id, item.rank])
-          );
-          return (rankByCourse.get(a.course_id) ?? Number.MAX_SAFE_INTEGER)
-            - (rankByCourse.get(b.course_id) ?? Number.MAX_SAFE_INTEGER);
-        }
         const dateA = new Date(a.accepted_at || a.enrolled_at || 0).getTime();
         const dateB = new Date(b.accepted_at || b.enrolled_at || 0).getTime();
         return courseSortOrder === "desc" ? dateB - dateA : dateA - dateB;
       });
-  }, [acceptedEnrollments, courseSearchQuery, courseStatusFilter, courseSortOrder, courseRecommendations]);
+  }, [acceptedEnrollments, courseSearchQuery, courseStatusFilter, courseSortOrder]);
 
   const completedCount = completedEnrollments.length;
   const inProgressCount = inProgressEnrollments.length;
@@ -259,9 +201,8 @@ export function useStudentDashboard() {
   const notStartedPercent = totalCount > 0 ? Math.max(0, 100 - completedPercent - inProgressPercent) : 0;
 
   const focusCourse = useMemo(() => {
-    const recommendedCourseId = courseRecommendations[0]?.entity.course_id;
-    const recommendedCourse = availableEnrollments.find((enrollment) => enrollment.course_id === recommendedCourseId);
-    if (recommendedCourse) return recommendedCourse;
+    // Was the ranking service's top pick, then this fallback. The fallback is
+    // now the whole rule: the course they have got furthest into.
     if (inProgressEnrollments.length > 0) {
       return inProgressEnrollments.reduce(
         (max, curr) => ((curr.progress_percent || 0) > (max.progress_percent || 0) ? curr : max),
@@ -272,12 +213,7 @@ export function useStudentDashboard() {
       return notStartedEnrollments[0];
     }
     return null;
-  }, [availableEnrollments, courseRecommendations, inProgressEnrollments, notStartedEnrollments]);
-
-  const focusRecommendation = useMemo(
-    () => courseRecommendations.find((item) => item.entity.course_id === focusCourse?.course_id) ?? null,
-    [courseRecommendations, focusCourse]
-  );
+  }, [inProgressEnrollments, notStartedEnrollments]);
 
   const currentCourse = useMemo(
     () => availableEnrollments.find((e) => e.course_id === selectedCourseId),
@@ -312,9 +248,6 @@ export function useStudentDashboard() {
     inProgressPercent,
     notStartedPercent,
     focusCourse,
-    focusRecommendation,
-    courseRecommendationSetId,
-    courseRecommendations,
     currentCourse,
   };
 }
