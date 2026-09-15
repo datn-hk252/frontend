@@ -94,7 +94,8 @@ interface QuizReview {
     earned_points: number;
     total_points: number;
     percentage: number;
-    is_passed: boolean;
+    // null while an essay or short answer is still with a teacher.
+    is_passed: boolean | null;
   };
   quiz: {
     id: number;
@@ -127,7 +128,7 @@ function ScoreRing({
   size = 120,
 }: {
   percentage: number;
-  passed: boolean;
+  passed: boolean | null;
   size?: number;
 }) {
   const r = 44;
@@ -171,7 +172,10 @@ function ScoreRing({
           {percentage.toFixed(0)}%
         </span>
         <span className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-          {passed ? "Đạt" : "Chưa đạt"}
+          {/* The badge beside this ring already says the paper is still with a
+              teacher; the ring saying "Chưa đạt" next to it contradicted it,
+              on a score the teacher has not finished producing. */}
+          {passed === true ? "Đạt" : passed === false ? "Chưa đạt" : "Chờ chấm"}
         </span>
       </div>
     </div>
@@ -772,12 +776,16 @@ export default function QuizReviewPage({
                         : "bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400"
                     }`}
                   >
-                    {attempt.is_passed ? (
+                    {attempt.is_passed === true ? (
                       <CheckCircle className="w-3 h-3" />
                     ) : (
                       <AlertCircle className="w-3 h-3" />
                     )}
-                    {attempt.is_passed ? "Đạt yêu cầu" : "Chưa đạt"}
+                    {attempt.is_passed === true
+                      ? "Đạt yêu cầu"
+                      : attempt.is_passed === false
+                        ? "Chưa đạt"
+                        : "Chờ giáo viên chấm"}
                   </span>
                   <span className="text-xs text-slate-400 dark:text-slate-500">
                     Lần làm #{attempt.attempt_number}

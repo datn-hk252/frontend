@@ -343,7 +343,11 @@ export default function QuizHistoryModal({
                         <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
                           <div
                             className={`h-full transition-all rounded-full ${
-                              attempt.is_passed ? "bg-green-500" : "bg-red-500"
+                              attempt.is_passed === true
+                                ? "bg-green-500"
+                                : attempt.is_passed === false
+                                  ? "bg-red-500"
+                                  : "bg-blue-500"
                             }`}
                             style={{ width: `${attempt.percentage}%` }}
                           />

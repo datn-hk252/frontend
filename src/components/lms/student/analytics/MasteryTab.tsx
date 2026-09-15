@@ -80,11 +80,13 @@ export function MasteryTab({
                     <div key={q.quiz_id} className="group flex items-center justify-between text-xs py-1.5 px-2 border-b border-slate-200/40 dark:border-blue-500/5 transition-colors hover:bg-slate-100/30 dark:hover:bg-[#12223a]/25 rounded-lg">
                       <span className="font-semibold text-slate-700 dark:text-slate-350 truncate max-w-[140px] group-hover:text-amber-600 dark:group-hover:text-cyan-405 transition-colors" title={q.quiz_title}>{q.quiz_title}</span>
                       <span className={`font-bold text-xs ${
-                        q.best_percentage === null 
-                          ? "text-slate-400 dark:text-slate-550" 
-                          : q.is_passed 
-                            ? "text-emerald-605 dark:text-emerald-400" 
-                            : "text-red-500 dark:text-red-450"
+                        q.best_percentage === null
+                          ? "text-slate-400 dark:text-slate-550"
+                          : q.is_passed === true
+                            ? "text-emerald-605 dark:text-emerald-400"
+                            : q.is_passed === false
+                              ? "text-red-500 dark:text-red-450"
+                              : "text-blue-500 dark:text-blue-400"
                       }`}>
                         {q.best_percentage !== null ? `${Math.round(q.best_percentage)}%` : "Chưa làm"}
                       </span>
