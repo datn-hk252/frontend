@@ -18,14 +18,18 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
   useEffect(() => {
     let cancelled = false;
     const openStudentRoute = async () => {
-      if (sessionStorage.getItem("lms_selected_role") === "STUDENT") {
+      // An admin may open the learner view to see what a student sees, the
+      // same way the teacher area already admits them.
+      const selectedRole = sessionStorage.getItem("lms_selected_role");
+      if (selectedRole === "STUDENT" || selectedRole === "ADMIN") {
         if (!cancelled) setLoading(false);
         return;
       }
       try {
         const roles = await lmsService.getMyRoles();
-        if (hasLmsRole(roles, "STUDENT")) {
-          activateLmsRole("STUDENT");
+        const role = hasLmsRole(roles, "STUDENT") ? "STUDENT" : hasLmsRole(roles, "ADMIN") ? "ADMIN" : null;
+        if (role) {
+          activateLmsRole(role);
           if (!cancelled) setLoading(false);
           return;
         }

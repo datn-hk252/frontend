@@ -3,31 +3,56 @@ import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
 /**
- * LMS roles carried by the access token.
+ * LMS areas that need a role, checked before Next.js resolves the route.
  *
- * The signature is not checked here - the frontend has no business holding
- * that secret, and every API call is verified on the Go side anyway. This is
- * for choosing a redirect, so a forged token buys nothing: the screen it opens
- * fetches from an API that will refuse it.
+ * Mirrors the client guards in each area's layout.tsx. Those still run - this
+ * is a second layer, so a teacher never receives the admin bundle at all
+ * instead of receiving it and being bounced a moment later.
  *
- * Reading the token rather than the NextAuth `role` field is deliberate. That
- * field holds the auth-service role, which is only a default: a user can be
- * given LMS roles directly (bulk import writes them), and then the two
- * disagree. The `roles` claim is what auth-service resolved and what the Go
- * API enforces, so gating on it cannot bounce someone the API would let in.
+ * An admin runs the centre rather than just the software, and reaches every
+ * area: checking what a teacher set up, or what a learner actually sees, is
+ * part of supporting them. Only the admin area is exclusive.
  */
-function lmsRolesFrom(accessToken: unknown): string[] {
-  if (typeof accessToken !== "string") return [];
+const LMS_ROLE_GATES: Array<{ prefix: string; allow: string[] }> = [
+  { prefix: "/lms/admin", allow: ["ADMIN"] },
+  { prefix: "/lms/teacher", allow: ["TEACHER", "ADMIN"] },
+  { prefix: "/lms/student", allow: ["STUDENT", "ADMIN"] },
+];
+
+/**
+ * Read the LMS roles out of the auth-service access token.
+ *
+ * The signature is deliberately not re-verified. The token travels inside the
+ * NextAuth session cookie, which getToken() has already authenticated with
+ * NEXTAUTH_SECRET, so a client cannot swap in one of their own making.
+ *
+ * Returns null when the roles cannot be read at all, which the caller treats
+ * as "let the client guard decide" rather than as a denial - lms-service is
+ * the control that actually protects the data, and a shape change here should
+ * not lock everybody out.
+ */
+function lmsRolesFromAccessToken(accessToken: unknown): string[] | null {
+  if (typeof accessToken !== "string") return null;
   const payload = accessToken.split(".")[1];
-  if (!payload) return [];
+  if (!payload) return null;
   try {
-    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
-    const json = atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, "="));
-    const roles = JSON.parse(json)?.roles;
-    return Array.isArray(roles) ? roles.map(String) : [];
+    const base64 = payload
+      .replace(/-/g, "+")
+      .replace(/_/g, "/")
+      .padEnd(Math.ceil(payload.length / 4) * 4, "=");
+    const bytes = Uint8Array.from(atob(base64), (ch) => ch.charCodeAt(0));
+    const roles = JSON.parse(new TextDecoder().decode(bytes))?.roles;
+    return Array.isArray(roles) ? roles.filter((r) => typeof r === "string") : null;
   } catch {
-    return [];
+    return null;
   }
+}
+
+/** Accepts both "ADMIN" and "ROLE_ADMIN", the way hasLmsRole does client-side. */
+function holdsAnyRole(roles: string[], allowed: string[]): boolean {
+  return roles.some((held) =>
+    allowed.some((want) => held === want || held === `ROLE_${want}`)
+  );
 }
 
 export async function middleware(req: NextRequest) {
@@ -61,8 +86,7 @@ export async function middleware(req: NextRequest) {
       : "bdc.session-token.v2",
   });
 
-  // Preserve a deep LMS link across login, then check the area is one this
-  // role has any business in.
+  // Preserve a deep LMS link across login, then gate the role-specific areas.
   if (pathname === "/lms" || pathname.startsWith("/lms/")) {
     if (!token || !token.accessToken || (token as any).error === "RefreshAccessTokenError") {
       const loginUrl = new URL("/login", req.url);
@@ -70,22 +94,13 @@ export async function middleware(req: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    // Defence in depth, not the defence itself: the Go API gates every read
-    // and write with RequireRoles, so a student who reached /lms/admin before
-    // this got a rendered shell full of failed requests rather than data.
-    // Bouncing them here sends them somewhere they can actually use, and
-    // stops the admin screens being a URL anyone can type.
-    //
-    // Empty roles means the token predates this claim or could not be read,
-    // and it fails open - the API still refuses what it should.
-    const roles = lmsRolesFrom(token.accessToken);
-    if (roles.length > 0) {
-      const denied =
-        (pathname.startsWith("/lms/admin") && !roles.includes("ADMIN")) ||
-        (pathname.startsWith("/lms/teacher") &&
-          !roles.includes("TEACHER") &&
-          !roles.includes("ADMIN"));
-      if (denied) {
+    const gate = LMS_ROLE_GATES.find(
+      ({ prefix }) => pathname === prefix || pathname.startsWith(prefix + "/")
+    );
+    if (gate) {
+      const roles = lmsRolesFromAccessToken(token.accessToken);
+      if (roles && !holdsAnyRole(roles, gate.allow)) {
+        // Same destination the client guard uses, just reached sooner.
         return NextResponse.redirect(new URL("/lms", req.url));
       }
     }
