@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Brain, Target, ListTodo } from "lucide-react";
+import { Target, ListTodo } from "lucide-react";
 import { Card, PageLoader, TabBar } from "@/components/lms/shared";
 import {
   Select,
@@ -13,7 +13,6 @@ import {
 import { Enrollment } from "@/types";
 import { LessonProgressTab } from "./analytics/LessonProgressTab";
 import { MasteryTab } from "./analytics/MasteryTab";
-import { FlashcardTab } from "./analytics/FlashcardTab";
 
 interface StudentCourseAnalyticsProps {
   selectedCourseId: number | null;
@@ -21,13 +20,10 @@ interface StudentCourseAnalyticsProps {
   acceptedEnrollments: Enrollment[];
   setSelectedCourseId: (id: number) => void;
   loadingAnalytics: boolean;
-  analyticsTab: "lessons" | "mastery" | "flashcards";
-  setAnalyticsTab: (tab: "lessons" | "mastery" | "flashcards") => void;
-  flashcardStats: any;
+  analyticsTab: "lessons" | "mastery";
+  setAnalyticsTab: (tab: "lessons" | "mastery") => void;
   quizScores: any[];
   lessonProgress: any;
-  microInteractions: any;
-  spacedRepQuizzes: any;
   mounted: boolean;
 }
 
@@ -39,11 +35,8 @@ export function StudentCourseAnalytics({
   loadingAnalytics,
   analyticsTab,
   setAnalyticsTab,
-  flashcardStats,
   quizScores,
   lessonProgress,
-  microInteractions,
-  spacedRepQuizzes,
   mounted,
 }: StudentCourseAnalyticsProps) {
   if (!selectedCourseId) {
@@ -94,7 +87,6 @@ export function StudentCourseAnalytics({
             tabs={[
               { id: "lessons", label: "Tiến độ bài học", icon: <ListTodo className="w-4 h-4" /> },
               { id: "mastery", label: "Năng lực & Quiz", icon: <Target className="w-4 h-4" /> },
-              { id: "flashcards", label: "Flashcard", icon: <Brain className="w-4 h-4" /> },
             ]}
             active={analyticsTab}
             onChange={setAnalyticsTab}
@@ -110,20 +102,9 @@ export function StudentCourseAnalytics({
           )}
 
           {analyticsTab === "mastery" && (
-            <MasteryTab
-              quizScores={quizScores}
-              microInteractions={microInteractions}
-              spacedRepQuizzes={spacedRepQuizzes}
-              mounted={mounted}
-            />
+            <MasteryTab quizScores={quizScores} mounted={mounted} />
           )}
 
-          {analyticsTab === "flashcards" && (
-            <FlashcardTab
-              flashcardStats={flashcardStats}
-              mounted={mounted}
-            />
-          )}
         </div>
       )}
     </div>

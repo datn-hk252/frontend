@@ -9,7 +9,6 @@ import {
   TooltipContent,
   TooltipProvider
 } from "@/components/ui/tooltip";
-import type { RecommendationItem } from "@/services/lms/recommendationService";
 
 interface FocusCourse {
   course_id: number;
@@ -19,7 +18,6 @@ interface FocusCourse {
 
 interface CourseProgressAndGoalCardProps {
   focusCourse: FocusCourse | null;
-  focusRecommendation?: RecommendationItem | null;
   onNavigateToCourse?: (courseId: number) => void;
   totalCount: number;
   completedCount: number;
@@ -33,7 +31,6 @@ interface CourseProgressAndGoalCardProps {
 
 export function CourseProgressAndGoalCard({
   focusCourse,
-  focusRecommendation,
   onNavigateToCourse,
   totalCount,
   completedCount,
@@ -182,11 +179,6 @@ export function CourseProgressAndGoalCard({
               <h3 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white line-clamp-1 min-w-0" title={focusCourse.course_title}>
                 {focusCourse.course_title}
               </h3>
-              {focusRecommendation?.badges[0] && (
-                <span className="hidden sm:inline-flex flex-shrink-0 rounded-full bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-300 border border-amber-200/70 dark:border-amber-500/20">
-                  {focusRecommendation.badges[0].text}
-                </span>
-              )}
             </div>
             {focusCourse.progress_percent !== undefined && (
               <span className="text-xs sm:text-sm font-bold text-amber-600 dark:text-amber-400 whitespace-nowrap flex-shrink-0">

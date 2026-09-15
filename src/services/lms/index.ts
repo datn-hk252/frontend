@@ -17,7 +17,6 @@ export * from "./quizService";
 export * from "./skillService";
 export { default as skillService } from "./skillService";
 export { default as quizService } from "./quizService";
-export * from "./recommendationService";
 export * from "./sectionOverviewService";
 export * from "./youtubeService";
 export { default as youtubeService } from "./youtubeService";

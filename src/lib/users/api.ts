@@ -62,6 +62,20 @@ export async function fetchUsers(params: {
   };
 }
 
+/**
+ * What an import answers with.
+ *
+ * The generated password only ever exists in the mail that carries it - the
+ * server stores a hash - so an address that failed leaves an account nobody can
+ * sign in to. That is why the failures come back rather than going to a log.
+ */
+export interface BulkRegisterResult {
+  users: User[];
+  emailFailures: string[];
+  /** Mail was still sending when the server answered; the list may grow. */
+  emailPending: boolean;
+}
+
 export async function postBulkRegister(
   payload: Array<{
     name: string;
@@ -71,7 +85,7 @@ export async function postBulkRegister(
     lmsRoles?: string[];
     code?: string;
   }>
-) {
+): Promise<BulkRegisterResult> {
   const res = await fetch(`/apiv1/api/auth/register/bulk`, {
     method: "POST",
     headers: await authHeaders({ "Content-Type": "application/json" }),
@@ -85,6 +99,26 @@ export async function postBulkRegister(
     );
   }
   return res.json();
+}
+
+/**
+ * Issues a new temporary password and mails it.
+ *
+ * A resend is really a reset: the old password cannot be read back, so the only
+ * thing that can be sent is a replacement.
+ */
+export async function resendPassword(id: number | string): Promise<void> {
+  const res = await fetch(`/apiv1/api/users/${id}/resend-password`, {
+    method: "POST",
+    credentials: "include",
+    headers: await authHeaders(),
+  });
+  if (!res.ok) {
+    const txt = await res.text().catch(() => "");
+    throw new Error(
+      `Resend password failed: ${res.status} ${res.statusText}${txt ? " - " + txt : ""}`
+    );
+  }
 }
 
 export async function postCreateUserSingle(user: {

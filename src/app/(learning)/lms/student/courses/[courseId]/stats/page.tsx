@@ -77,8 +77,10 @@ const STATUS_CFG = {
     label: "Đang làm",
     cls: "bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20",
   },
+  // Reached only while an essay or short answer waits for a teacher; a paper
+  // the machine could finish goes straight to passed or failed.
   submitted: {
-    label: "Đã nộp",
+    label: "Chờ chấm",
     cls: "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20",
   },
   passed: {
@@ -155,7 +157,9 @@ export default function StatsPage() {
   const completedCount = progress?.completed_count ?? completedIds.size;
   const progressPct = totalMandatory > 0 ? Math.round((completedCount / totalMandatory) * 100) : 0;
 
-  const passedQuizzes = quizScores.filter((q) => q.is_passed).length;
+  // is_passed is null while a paper is still with a teacher, so it counts as
+  // neither passed nor failed - which is what null means.
+  const passedQuizzes = quizScores.filter((q) => q.is_passed === true).length;
   const avgPct =
     quizScores.length > 0 ? quizScores.reduce((s, q) => s + (q.best_percentage ?? 0), 0) / quizScores.length : null;
 

@@ -43,8 +43,10 @@ const STATUS_CONFIG: Record<Status, {
     text: "text-amber-600 dark:text-amber-400",
     border: "border-amber-200 dark:border-amber-700",
   },
+  // Reached only when an essay or short answer is still waiting for a
+  // teacher - a fully auto-graded paper goes straight to passed/failed.
   submitted: {
-    label: "Đã nộp",
+    label: "Chờ chấm",
     icon: <AlertCircle className="w-3.5 h-3.5" />,
     bg: "bg-blue-50 dark:bg-blue-950/30",
     text: "text-blue-600 dark:text-blue-400",
@@ -199,6 +201,9 @@ export function QuizScoreSection({ scores, courseId }: Props) {
   const passed  = scores.filter(s => s.status === "passed").length;
   const failed  = scores.filter(s => s.status === "failed").length;
   const pending = scores.filter(s => s.status === "not_started" || s.status === "in_progress").length;
+  // Left out of every count before, so a paper waiting on a teacher
+  // vanished from the summary line while still showing in the grid.
+  const grading = scores.filter(s => s.status === "submitted").length;
 
   return (
     <section>
@@ -212,7 +217,9 @@ export function QuizScoreSection({ scores, courseId }: Props) {
             {passed > 0 && <span className="text-emerald-600 dark:text-emerald-400 font-medium">{passed} đạt</span>}
             {passed > 0 && (failed > 0 || pending > 0) && <span className="mx-1 text-slate-300">·</span>}
             {failed > 0 && <span className="text-red-500 dark:text-red-400 font-medium">{failed} chưa đạt</span>}
-            {failed > 0 && pending > 0 && <span className="mx-1 text-slate-300">·</span>}
+            {failed > 0 && (pending > 0 || grading > 0) && <span className="mx-1 text-slate-300">·</span>}
+            {grading > 0 && <span className="text-blue-600 dark:text-blue-400 font-medium">{grading} chờ chấm</span>}
+            {grading > 0 && pending > 0 && <span className="mx-1 text-slate-300">·</span>}
             {pending > 0 && <span>{pending} chưa làm</span>}
           </p>
         </div>

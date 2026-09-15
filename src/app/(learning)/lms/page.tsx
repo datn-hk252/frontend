@@ -102,9 +102,21 @@ function LMSRoleSelectionContent() {
     if (status === "authenticated") {
       fetchUserRoles();
     } else if (status === "unauthenticated") {
-      router.push("/login");
+      // Deliberately no redirect. The middleware already refuses this route
+      // without a session and sends the browser to /login carrying a
+      // callbackUrl, so the server decides once and keeps the deep link.
+      //
+      // Pushing to /login from here as well put two guards on opposite sides
+      // of the same question: this one read the session on the client, saw
+      // none and left, while (auth)/layout read it on the server, saw one and
+      // sent the browser straight back. Reaching here now means exactly that
+      // disagreement - the server let the request through, the client cannot
+      // see a session - and the only useful thing to do is say so and stop,
+      // because the spinner would otherwise turn forever.
+      setError("Phiên đăng nhập không còn hợp lệ. Hãy tải lại trang để đăng nhập lại.");
+      setLoading(false);
     }
-  }, [status, router, fetchUserRoles]);
+  }, [status, fetchUserRoles]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

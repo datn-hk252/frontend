@@ -15,7 +15,6 @@ interface CreateUserModalProps {
 export default function CreateUserModal({ open, onClose, onUserCreated }: CreateUserModalProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
   const [role, setRole] = useState("ROLE_STUDENT");
 
   const [saving, setSaving] = useState(false);
@@ -34,7 +33,6 @@ export default function CreateUserModal({ open, onClose, onUserCreated }: Create
       // Reset form
       setName("");
       setEmail("");
-      setCode("");
       setRole("ROLE_STUDENT");
       setError(null);
       setSuccess(false);
@@ -61,7 +59,7 @@ export default function CreateUserModal({ open, onClose, onUserCreated }: Create
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim() || !code.trim()) {
+    if (!name.trim() || !email.trim()) {
       setError("Vui lòng điền đầy đủ các trường bắt buộc.");
       return;
     }
@@ -75,12 +73,22 @@ export default function CreateUserModal({ open, onClose, onUserCreated }: Create
         name: name.trim(),
         email: email.trim().toLowerCase(),
         role: mapFrontendRoleToBackend(role, roles),
-        code: code.trim(),
       }];
 
       const res = await postBulkRegister(payload);
       if (!res) {
         throw new Error("Không thể tạo người dùng mới.");
+      }
+
+      // The account exists either way; only the password delivery can fail, and
+      // the password is not recoverable, so say so instead of closing on success.
+      if ((res.emailFailures ?? []).length > 0 || res.emailPending) {
+        setError(
+          "Tài khoản đã tạo nhưng chưa gửi được mật khẩu. Mở hồ sơ người này và bấm " +
+            "\"Gửi lại mật khẩu\"."
+        );
+        onUserCreated();
+        return;
       }
 
       setSuccess(true);
@@ -138,8 +146,8 @@ export default function CreateUserModal({ open, onClose, onUserCreated }: Create
             </div>
           )}
 
-          {/* Name & Code */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* Name */}
+          <div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
                 Tên *
@@ -156,21 +164,6 @@ export default function CreateUserModal({ open, onClose, onUserCreated }: Create
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-                Mã số (Code) *
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  required
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  placeholder="2310000"
-                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 rounded-xl text-slate-900 dark:text-slate-50 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all duration-200 text-sm"
-                />
-              </div>
-            </div>
           </div>
 
           {/* Email */}

@@ -3,8 +3,8 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { User } from "@/types";
 import { UserAvatar } from "../UserAvatar";
-import { X, Pencil, Save, Loader2, Mail, Hash, Shield, Calendar, Activity, Trash2 } from "lucide-react";
-import { updateUser, updateUserRole, deleteUser } from "@/lib/users/api";
+import { X, Pencil, Save, Loader2, Mail, Hash, Shield, Calendar, Activity, Trash2, KeyRound } from "lucide-react";
+import { updateUser, updateUserRole, deleteUser, resendPassword } from "@/lib/users/api";
 import { useAuth } from "@/hooks/auth/useAuth";
 import { fetchRoles, Role } from "@/lib/admin/rolesApi";
 import LmsUserRoleManager from "@/components/lms/admin/LmsUserRoleManager";
@@ -47,6 +47,32 @@ export default function DetailModal({ user, onClose, isAdmin = false, onUserUpda
   // Deleting the account you are signed in with locks you out of the screen you
   // are standing on, so the control simply is not offered for yourself.
   const isSelf = !!me && !!user && String(me.id) === String(user.id);
+
+  const [resending, setResending] = useState(false);
+  const [resendNote, setResendNote] = useState<string | null>(null);
+
+  const handleResend = async () => {
+    if (!user) return;
+    if (
+      !confirm(
+        `Gửi lại mật khẩu cho ${user.name}?` +
+          "\n\nMật khẩu cũ không đọc lại được, nên hệ thống sẽ cấp một mật khẩu mới " +
+          "và gửi tới " + user.email + ". Mật khẩu cũ ngừng hiệu lực ngay."
+      )
+    ) {
+      return;
+    }
+    setResending(true);
+    setResendNote(null);
+    try {
+      await resendPassword(user.id);
+      setResendNote("Đã gửi mật khẩu mới tới " + user.email + ".");
+    } catch {
+      setResendNote("Không gửi được thư. Kiểm tra cấu hình email rồi thử lại — mật khẩu cũ vẫn chưa bị thay.");
+    } finally {
+      setResending(false);
+    }
+  };
 
   const handleDelete = async () => {
     if (!user) return;
@@ -394,6 +420,14 @@ export default function DetailModal({ user, onClose, isAdmin = false, onUserUpda
           )}
         </div>
 
+        {resendNote && (
+          <div className="px-4 sm:px-6 pt-3 flex-shrink-0">
+            <p className="text-xs text-slate-600 dark:text-slate-400 border-l-2 border-blue-500 pl-3">
+              {resendNote}
+            </p>
+          </div>
+        )}
+
         {/* ── Footer ── */}
         <div className="flex justify-end gap-3 p-4 sm:px-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex-shrink-0">
           {isEditing ? (
@@ -431,6 +465,21 @@ export default function DetailModal({ user, onClose, isAdmin = false, onUserUpda
             </>
           ) : (
             <>
+              {isAdmin && (
+                <button
+                  onClick={handleResend}
+                  disabled={resending}
+                  className="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700
+                             text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900
+                             hover:bg-slate-50 dark:hover:bg-slate-800 font-medium
+                             transition-all duration-200 active:scale-95 disabled:opacity-50
+                             flex items-center gap-2"
+                  title={`Cấp mật khẩu mới và gửi tới ${user.email}`}
+                >
+                  {resending ? <Loader2 size={16} className="animate-spin" /> : <KeyRound size={16} />}
+                  {resending ? "Đang gửi..." : "Gửi lại mật khẩu"}
+                </button>
+              )}
               {isAdmin && !isSelf && (
                 <button
                   onClick={handleDelete}

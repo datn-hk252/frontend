@@ -9,7 +9,6 @@ import { StudentDashboardHeader } from "@/components/lms/student/StudentDashboar
 import { StartLearningBanner } from "@/components/lms/student/StartLearningBanner";
 import { useScrollSnap } from "@/hooks/common/useScrollSnap";
 import { useStudentDashboard } from "@/hooks/lms/student/useStudentDashboard";
-import { trackRecommendationEvent } from "@/services/lms/recommendationService";
 
 export default function StudentDashboard() {
   const router = useRouter();
@@ -34,11 +33,8 @@ export default function StudentDashboard() {
     selectedCourseId,
     setSelectedCourseId,
     loadingAnalytics,
-    flashcardStats,
     quizScores,
     lessonProgress,
-    microInteractions,
-    spacedRepQuizzes,
     analyticsTab,
     setAnalyticsTab,
     loadAllData,
@@ -51,9 +47,6 @@ export default function StudentDashboard() {
     inProgressPercent,
     notStartedPercent,
     focusCourse,
-    focusRecommendation,
-    courseRecommendationSetId,
-    courseRecommendations,
     currentCourse,
   } = useStudentDashboard();
 
@@ -63,7 +56,6 @@ export default function StudentDashboard() {
       <div ref={headerRef}>
         <StudentDashboardHeader
           focusCourse={focusCourse}
-          focusRecommendation={focusRecommendation}
           totalCount={totalCount}
           completedCount={completedCount}
           inProgressCount={inProgressCount}
@@ -73,13 +65,7 @@ export default function StudentDashboard() {
           notStartedPercent={notStartedPercent}
           loadingEnrolled={loadingEnrolled}
           loadAllData={loadAllData}
-          onNavigateToCourse={(courseId) => {
-            if (focusRecommendation?.entity.course_id === courseId && courseRecommendationSetId) {
-              trackRecommendationEvent(focusRecommendation, courseRecommendationSetId, "click", "dashboard");
-              trackRecommendationEvent(focusRecommendation, courseRecommendationSetId, "started", "dashboard");
-            }
-            router.push(`/lms/student/courses/${courseId}`);
-          }}
+          onNavigateToCourse={(courseId) => router.push(`/lms/student/courses/${courseId}`)}
         />
       </div>
 
@@ -89,7 +75,8 @@ export default function StudentDashboard() {
         {error && <Alert type="error">{error}</Alert>}
         {currentCourse?.course_status === "ARCHIVED" && (
           <Alert type="error">
-            Khóa học &quot;{currentCourse.course_title}&quot; tạm thời bị vô hiệu hóa để xem xét lại nội dung vi phạm.
+            Khóa học &quot;{currentCourse.course_title}&quot; đã được trung tâm lưu trữ nên
+            tạm thời không mở. Học liệu vẫn còn; liên hệ trung tâm nếu bạn cần xem lại.
           </Alert>
         )}
 
@@ -105,11 +92,8 @@ export default function StudentDashboard() {
               loadingAnalytics={loadingAnalytics}
               analyticsTab={analyticsTab}
               setAnalyticsTab={setAnalyticsTab}
-              flashcardStats={flashcardStats}
               quizScores={quizScores}
               lessonProgress={lessonProgress}
-              microInteractions={microInteractions}
-              spacedRepQuizzes={spacedRepQuizzes}
               mounted={mounted}
             />
           </div>
@@ -119,7 +103,6 @@ export default function StudentDashboard() {
             <StudentCourseSidebar
               acceptedEnrollments={acceptedEnrollments}
               filteredAndSortedEnrollments={filteredAndSortedEnrollments}
-              courseRecommendations={courseRecommendations}
               loadingEnrolled={loadingEnrolled}
               selectedCourseId={selectedCourseId}
               setSelectedCourseId={setSelectedCourseId}

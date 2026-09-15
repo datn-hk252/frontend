@@ -22,7 +22,6 @@ interface ProgressCardProps {
   progress: number;
   isSelected?: boolean;
   enrolledAt?: string;
-  recommendationBadge?: string;
   isUnavailable?: boolean;
   unavailableMessage?: string;
   onUnavailableClick?: () => void;
@@ -52,7 +51,6 @@ export function ProgressCard({
   progress,
   isSelected = false,
   enrolledAt,
-  recommendationBadge,
   isUnavailable = false,
   unavailableMessage,
   onUnavailableClick,
@@ -76,8 +74,7 @@ export function ProgressCard({
               <Badge variant={progress === 100 ? "green" : progress > 0 ? "blue" : "gray"}>
                 {progress === 100 ? "Đã xong" : progress > 0 ? "Đang học" : "Chưa học"}
               </Badge>
-              {isUnavailable && <Badge variant="red">Tạm vô hiệu hóa</Badge>}
-              {recommendationBadge && <Badge variant="purple">{recommendationBadge}</Badge>}
+              {isUnavailable && <Badge variant="gray">Đã lưu trữ</Badge>}
               <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">#{courseId}</span>
             </div>
 

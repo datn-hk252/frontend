@@ -36,6 +36,8 @@ export default function BulkUploadPreviewModal({ open, onClose, parsedUsers, onI
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [mailFailures, setMailFailures] = useState<string[]>([]);
+  const [mailPending, setMailPending] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -126,11 +128,14 @@ export default function BulkUploadPreviewModal({ open, onClose, parsedUsers, onI
       const code = user.code.trim();
       if (!user.name.trim()) errors.push("Thiếu họ tên");
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) errors.push("Email không hợp lệ");
-      if (!code) errors.push("Thiếu mã số");
       if (seenEmails.has(email)) errors.push("Trùng email trong file");
-      if (seenCodes.has(code)) errors.push("Trùng mã số trong file");
+      // A blank code is not a mistake any more - the server allocates one. Only
+      // codes the file actually supplies are checked, and an empty string must
+      // stay out of the set or every blank row after the first reads as a
+      // duplicate of the one before it.
+      if (code && seenCodes.has(code)) errors.push("Trùng mã số trong file");
       seenEmails.add(email);
-      seenCodes.add(code);
+      if (code) seenCodes.add(code);
 
       const rowRoles = user.roles.split(";").map(value => value.trim().toUpperCase()).filter(Boolean);
       if (!rowRoles.length) errors.push("Thiếu role");
@@ -186,11 +191,19 @@ export default function BulkUploadPreviewModal({ open, onClose, parsedUsers, onI
         throw new Error("Không thể import người dùng.");
       }
 
+      const failures: string[] = res.emailFailures ?? [];
+      setMailFailures(failures);
+      setMailPending(Boolean(res.emailPending));
       setSuccess(true);
       onImportSuccess();
-      setTimeout(() => {
-        onClose();
-      }, 1500);
+
+      // Closing on a timer would take the list of failed addresses with it, and
+      // that list is the only record of which accounts still need a password.
+      if (failures.length === 0 && !res.emailPending) {
+        setTimeout(() => {
+          onClose();
+        }, 1500);
+      }
     } catch (err: any) {
       console.error(err);
       setError(err?.message ?? "Import thất bại. Vui lòng kiểm tra lại dữ liệu.");
@@ -246,10 +259,37 @@ export default function BulkUploadPreviewModal({ open, onClose, parsedUsers, onI
               </div>
             </div>
           )}
-          {success && (
+          {success && mailFailures.length === 0 && !mailPending && (
             <div className="p-4 mb-4 bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800 rounded-2xl flex gap-3 items-center">
               <Check className="w-5 h-5 text-green-500" />
               <p className="text-sm font-semibold text-green-800 dark:text-green-300">Import thành công! Đang đồng bộ...</p>
+            </div>
+          )}
+          {success && mailPending && mailFailures.length === 0 && (
+            <div className="p-4 mb-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-2xl">
+              <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+                Tài khoản đã tạo, thư vẫn đang gửi
+              </p>
+              <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+                Hệ thống chưa xác nhận được thư nào đã đến. Kiểm tra lại sau ít phút; ai
+                không nhận được thì mở hồ sơ và bấm &quot;Gửi lại mật khẩu&quot;.
+              </p>
+            </div>
+          )}
+          {success && mailFailures.length > 0 && (
+            <div className="p-4 mb-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-2xl">
+              <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+                Tài khoản đã tạo, nhưng {mailFailures.length} thư không gửi được
+              </p>
+              <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+                Mật khẩu chỉ nằm trong thư đó và không tra lại được. Những người dưới đây
+                chưa đăng nhập được — mở hồ sơ từng người và bấm &quot;Gửi lại mật khẩu&quot;.
+              </p>
+              <ul className="mt-2 max-h-32 overflow-y-auto text-xs text-amber-900 dark:text-amber-200 font-mono space-y-0.5">
+                {mailFailures.map((address) => (
+                  <li key={address}>{address}</li>
+                ))}
+              </ul>
             </div>
           )}
 
@@ -259,7 +299,7 @@ export default function BulkUploadPreviewModal({ open, onClose, parsedUsers, onI
                 <tr>
                   <th className="px-4 py-3">Tên *</th>
                   <th className="px-4 py-3">Email *</th>
-                  <th className="px-4 py-3">Mã số *</th>
+                  <th className="px-4 py-3">Mã số</th>
                   <th className="px-4 py-3">Vai trò</th>
                   <th className="px-4 py-3">LMS roles</th>
                   <th className="px-4 py-3 text-center w-12"></th>
@@ -289,9 +329,9 @@ export default function BulkUploadPreviewModal({ open, onClose, parsedUsers, onI
                     <td className="px-3 py-2">
                       <input
                         type="text"
-                        required
                         value={u.code}
                         onChange={(e) => handleUpdateField(u.id, "code", e.target.value)}
+                        placeholder="tự sinh"
                         className="w-full px-2 py-1.5 border border-slate-200 dark:border-slate-800 bg-transparent rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 outline-none text-sm dark:text-slate-100"
                       />
                     </td>

@@ -89,6 +89,7 @@ export function LessonProgressTab({ lessonProgress, mounted }: LessonProgressTab
     if (!lessonProgress || !lessonProgress.by_type) return [];
     const labelMap: Record<string, string> = {
       VIDEO: "Video",
+      AUDIO: "Âm thanh",
       DOCUMENT: "Tài liệu",
       TEXT: "Bài đọc",
       IMAGE: "Hình ảnh",
