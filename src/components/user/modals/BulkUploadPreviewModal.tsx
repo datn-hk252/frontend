@@ -128,11 +128,14 @@ export default function BulkUploadPreviewModal({ open, onClose, parsedUsers, onI
       const code = user.code.trim();
       if (!user.name.trim()) errors.push("Thiếu họ tên");
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) errors.push("Email không hợp lệ");
-      if (!code) errors.push("Thiếu mã số");
       if (seenEmails.has(email)) errors.push("Trùng email trong file");
-      if (seenCodes.has(code)) errors.push("Trùng mã số trong file");
+      // A blank code is not a mistake any more - the server allocates one. Only
+      // codes the file actually supplies are checked, and an empty string must
+      // stay out of the set or every blank row after the first reads as a
+      // duplicate of the one before it.
+      if (code && seenCodes.has(code)) errors.push("Trùng mã số trong file");
       seenEmails.add(email);
-      seenCodes.add(code);
+      if (code) seenCodes.add(code);
 
       const rowRoles = user.roles.split(";").map(value => value.trim().toUpperCase()).filter(Boolean);
       if (!rowRoles.length) errors.push("Thiếu role");
@@ -296,7 +299,7 @@ export default function BulkUploadPreviewModal({ open, onClose, parsedUsers, onI
                 <tr>
                   <th className="px-4 py-3">Tên *</th>
                   <th className="px-4 py-3">Email *</th>
-                  <th className="px-4 py-3">Mã số *</th>
+                  <th className="px-4 py-3">Mã số</th>
                   <th className="px-4 py-3">Vai trò</th>
                   <th className="px-4 py-3">LMS roles</th>
                   <th className="px-4 py-3 text-center w-12"></th>
@@ -326,9 +329,9 @@ export default function BulkUploadPreviewModal({ open, onClose, parsedUsers, onI
                     <td className="px-3 py-2">
                       <input
                         type="text"
-                        required
                         value={u.code}
                         onChange={(e) => handleUpdateField(u.id, "code", e.target.value)}
+                        placeholder="tự sinh"
                         className="w-full px-2 py-1.5 border border-slate-200 dark:border-slate-800 bg-transparent rounded-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 outline-none text-sm dark:text-slate-100"
                       />
                     </td>
